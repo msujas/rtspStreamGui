@@ -583,7 +583,7 @@ class Ui_MainWindow(object):
 		#	   self.manualFPSBox,self.FPSBox,self.xResBox,self.yResBox,self.xOffsetBox,self.yOffsetBox,self.directoryBox]
 		
 		self.updateParamDct()
-		self.settingsLog = f'{homepath}/rtspGuiConfig/lucidGUIconfiguration.log'
+		self.settingsLog = f'{homepath}/rtspGuiConfig/rtspGUIconfiguration.log'
 		if not os.path.exists(os.path.dirname(self.settingsLog)):
 			os.makedirs(os.path.dirname(self.settingsLog))
 		if os.path.exists(self.settingsLog):
@@ -591,7 +591,7 @@ class Ui_MainWindow(object):
 
 	def retranslateUi(self, MainWindow):
 		_translate = QtCore.QCoreApplication.translate
-		MainWindow.setWindowTitle(_translate("MainWindow", "Lucid GUI"))
+		MainWindow.setWindowTitle(_translate("MainWindow", "rtsp GUI"))
 		self.runButton.setText(_translate("MainWindow", "Let\'s gooooo!"))
 
 		self.monitorxLabel.setText(_translate("MainWindow", "x image size on screen"))
@@ -646,7 +646,7 @@ class Ui_MainWindow(object):
 		crossCheck = self.crossCheckBox.isChecked()
 		imageTime = self.imageSeriesTime.value()
 
-		self.thread = Worker(width = width,height = height, monitorx = monitorx,monitory = monitory,
+		self.thread = Worker(address= rtspAdress,width = width,height = height, monitorx = monitorx,monitory = monitory,
 		manualfps = manualfps,fps = fps,gainAuto = gainAuto,gain = gain, fmt = colourFormat, screenwidth = self.screenwidth, screenheight=self.screenheight,
 		crosssize = crosssize,crossOffsetH = crossOffsetH, crossOffsetW = crossOffsetW, crossCheck = crossCheck, imageTime = imageTime, 
 		imageDir = self.snapshotDir,lineCheck=self.lineCheckBox.isChecked(), linePosition=self.linePositionBox.value())
