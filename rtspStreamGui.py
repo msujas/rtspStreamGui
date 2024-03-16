@@ -37,6 +37,13 @@ class parAttributes():
 			return self.param.text()
 
 		
+def applyGain(array,gain):
+	gainExtent=40
+	maxGain = 2
+	adjustedGain = gain/(gainExtent/maxGain)
+	newarray = array*adjustedGain
+	newarray = np.where(newarray > 255, 255, newarray).astype(np.uint8)
+	return newarray
 
 class Worker(QtCore.QThread):
 	def __init__(self,address:str, monitorx: int, monitory: int,manualfps: bool,fps: int, gainAuto: str, 
@@ -127,7 +134,7 @@ class Worker(QtCore.QThread):
 			#array = np.random.randint(0,255,size=(500,800,3),dtype = np.uint8)
 
 			ret, array = video.read()
-
+			array = applyGain(array,self.gain)
 			"""
 			Create a reshaped NumPy array to display using OpenCV
 			"""
@@ -221,7 +228,7 @@ class Ui_MainWindow(object):
 		else:
 			monydefault = 900
 		scaling = (self.screenwidth/1920)**0.5 #scaling box and font sizes for different screen resolutions
-		windowsize = [int(280*scaling),int(700*scaling)]
+		windowsize = [int(350*scaling),int(700*scaling)]
 		MainWindow.resize(*windowsize)
 		MainWindow.move(0,self.screenheight - windowsize[1] - 75)
 		box1pos = [int(20*scaling), int(35*scaling)]
@@ -253,15 +260,34 @@ class Ui_MainWindow(object):
 		smallLabelfont.setPointSize(basefont-5)
 
 		self.rtspAdressBox = QtWidgets.QLineEdit(self.centralwidget)
-		self.rtspAdressBox.setGeometry(QtCore.QRect(box1x, int(0.5*boxOffset + box1pos[1]),*lineBoxDimensions))
+		self.rtspAdressBox.setGeometry(QtCore.QRect(box1x, int(0*boxOffset + box1pos[1]),*lineBoxDimensions))
 		self.rtspAdressBox.setObjectName("rtspAdressBox")
 		self.rtspAdressBox.setFont(boxfont)
 
 		self.rtspAdressLabel = QtWidgets.QLabel(self.centralwidget)
-		self.rtspAdressLabel.setGeometry(QtCore.QRect(box1x, int(0*boxOffset + box1pos[1]), 111, 16))
+		self.rtspAdressLabel.setGeometry(QtCore.QRect(box1x, int(-0.5*boxOffset + box1pos[1]), 111, 16))
 		self.rtspAdressLabel.setObjectName("rtspAdressLabel")
 		self.rtspAdressLabel.setFont(labelfont)
 		self.rtspAdressLabel.setText('rtsp address')
+
+		self.rtspAdressesLabel = QtWidgets.QLabel(self.centralwidget)
+		self.rtspAdressesLabel.setGeometry(QtCore.QRect(box1x, int(0.6*boxOffset + box1pos[1]), 111, 16))
+		self.rtspAdressesLabel.setObjectName("rtspAdressesLabel")
+		self.rtspAdressesLabel.setFont(labelfont)
+		self.rtspAdressesLabel.setText('stored rtsp addresses')
+		self.rtspAdressesLabel.adjustSize()
+
+		self.rtspAddressesBox = QtWidgets.QComboBox(self.centralwidget)
+		self.rtspAddressesBox.setGeometry(QtCore.QRect(box1x, int(1*boxOffset + box1pos[1]),*lineBoxDimensions))
+		self.rtspAddressesBox.setObjectName("rtspAddressesBox")
+		self.rtspAddressesBox.setFont(boxfont)
+
+		self.removeAddressButton = QtWidgets.QPushButton(self.centralwidget)
+		self.removeAddressButton.setGeometry(QtCore.QRect(box1x+10+lineBoxDimensions[0], int(1*boxOffset + box1pos[1]),*boxDimensions))
+		self.removeAddressButton.setObjectName("removeAddressButton")
+		self.removeAddressButton.setFont(boxfont)
+		self.removeAddressButton.setText('remove\naddress')
+		self.removeAddressButton.adjustSize()
 
 		self.monitorxBox = QtWidgets.QSpinBox(self.centralwidget) #select x size of image on screen (in pixels)
 		self.monitorxBox.setGeometry(QtCore.QRect(box1x, 2*boxOffset + box1pos[1],*boxDimensions))
@@ -340,7 +366,7 @@ class Ui_MainWindow(object):
 		self.gainBox = QtWidgets.QDoubleSpinBox(self.centralwidget) #select gain (if gainAuto is off)
 		self.gainBox.setGeometry(QtCore.QRect(box1x, 7*boxOffset + box1pos[1],*boxDimensions))
 		self.gainBox.setDecimals(1)
-		self.gainBox.setMaximum(48.0)
+		self.gainBox.setMaximum(40.0)
 		self.gainBox.setObjectName("gainBox")
 		self.gainBox.setFont(boxfont)
 
@@ -529,7 +555,7 @@ class Ui_MainWindow(object):
 		self.manualFPSBox.addItem('False')
 		self.manualFPSBox.addItem('True')
 		self.FPSBox.setValue(30)
-		self.gainBox.setValue(30.0)
+		self.gainBox.setValue(20.0)
 		self.gainAutoBox.addItem('Off')
 		self.gainAutoBox.addItem('Once')
 		self.gainAutoBox.addItem('Continuous')
@@ -569,16 +595,21 @@ class Ui_MainWindow(object):
 		self.lockCrossPositionBox.stateChanged.connect(self.crossDisplayCheck)
 		self.lockCrossPositionBox.stateChanged.connect(self.updateConfigLog)
 		self.openDirectoryButton.clicked.connect(self.folderDialogue)
+		self.rtspAddressesBox.currentTextChanged.connect(self.changeAddress)
+		self.removeAddressButton.clicked.connect(self.removeAddress)
 		
 		#self.paramConfigList = [self.crossOffsetHBox, self.crossOffsetWBox,self.monitorxBox,self.monitoryBox,self.colourBox,
 		#	   self.manualFPSBox,self.FPSBox,self.xResBox,self.yResBox,self.xOffsetBox,self.yOffsetBox,self.directoryBox]
 		
 		self.updateParamDct()
 		self.settingsLog = f'{homepath}/rtspGuiConfig/rtspGUIconfiguration.log'
+		self.addressLog = f'{homepath}/rtspGuiConfig/rtspAddresses.log'
 		if not os.path.exists(os.path.dirname(self.settingsLog)):
 			os.makedirs(os.path.dirname(self.settingsLog))
 		if os.path.exists(self.settingsLog):
 			self.readConfigLog()
+		if os.path.exists(self.addressLog):
+			self.readAddressLog()
 
 	def retranslateUi(self, MainWindow):
 		_translate = QtCore.QCoreApplication.translate
@@ -611,7 +642,7 @@ class Ui_MainWindow(object):
 		self.stopButton.setEnabled(True)
 		self.snapShotButton.setEnabled(True)
 		self.imageSeriesButton.setEnabled(True)
-
+		self.addAddress()
 
 		rtspAdress = self.rtspAdressBox.text()
 		monitorx = self.monitorxBox.value()
@@ -661,6 +692,45 @@ class Ui_MainWindow(object):
 						self.directoryBox.objectName():[self.directoryBox,self.directoryBox.text()],
 						self.linePositionBox.objectName():[self.linePositionBox,self.linePositionBox.value()],
 						self.lineCheckBox.objectName():[self.lineCheckBox,self.lineCheckBox.isChecked()]}
+	
+	def addAddress(self):
+		currentAddress = self.rtspAdressBox.text()
+		allItems = [self.rtspAddressesBox.itemText(i) for i in 
+			  range(self.rtspAddressesBox.count())]
+		if not currentAddress in allItems:
+			self.rtspAddressesBox.addItem(self.rtspAdressBox.text())
+			self.rtspAddressesBox.setCurrentIndex(self.rtspAddressesBox.count()-1)
+			self.updateConfigLog()
+			self.updateAddressLog()
+
+	def changeAddress(self):
+		newAddress = self.rtspAddressesBox.currentText()
+		self.rtspAdressBox.setText(newAddress)
+		self.updateConfigLog()
+	
+	def updateAddressLog(self):
+		allItems = [self.rtspAddressesBox.itemText(i) for i in 
+			  range(self.rtspAddressesBox.count())]
+		addressesString = '\n'.join(allItems)
+		f = open(self.addressLog,'w')
+		f.write(addressesString)
+		f.close()
+	
+	def readAddressLog(self):
+		f = open(self.addressLog,'r')
+		addressString = f.read()
+		f.close()
+		allAdresses = addressString.split('\n')
+		for item in allAdresses:
+			self.rtspAddressesBox.addItem('')
+			self.rtspAddressesBox.setItemText(self.rtspAddressesBox.count()-1,item)
+			if item == self.rtspAdressBox.text():
+				self.rtspAddressesBox.setCurrentIndex(self.rtspAddressesBox.count()-1)
+	
+	def removeAddress(self):
+		if self.rtspAddressesBox.count() > 0:
+			self.rtspAddressesBox.removeItem(self.rtspAddressesBox.currentIndex())
+
 	def changeGain(self):
 		if self.running:
 			self.thread.gain = self.gainBox.value()
