@@ -84,22 +84,9 @@ class Worker(QtCore.QThread):
 		'YCbCr8_CbYCr':3, 'YUV422_8':3, 'YUV422_8_UYVY':3, 'YCbCr411_8':3, 'YUV411_8_UYYVYY':3}
 
 
-		if self.ox > 4096 - self.width:
-			print('OffsetX is too large for resolution used; it must be less than or equal to\n'
-				'4096 (max. res.) - set resolution\n'
-				'exiting')
-			return
-
-		if self.oy > 3000 - self.height:
-			print('OffsetY is too large for resolution used; it must be less than or equal to\n'
-					'3000 (max. res.) - set resolution\n'
-					'exiting')
-			return
-
-
 
 		#aspect = nodes['Width'].value/nodes['Height'].value
-		aspect = 1
+		aspect = array.shape[1]/array.shape[0]
 		crossThickness = 4
 		lineSize = 300
 		lineThickness = 3
