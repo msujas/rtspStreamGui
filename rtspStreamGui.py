@@ -39,13 +39,11 @@ class parAttributes():
 		
 
 class Worker(QtCore.QThread):
-	def __init__(self,address:str,width: int, height: int, monitorx: int, monitory: int,manualfps: bool,fps: int, gainAuto: str, 
+	def __init__(self,address:str, monitorx: int, monitory: int,manualfps: bool,fps: int, gainAuto: str, 
 	gain: float, fmt: str, screenwidth: int, screenheight: int, crosssize: int, crossOffsetH: int, crossOffsetW: int, crossCheck: bool, linePosition: int, 
 	imageTime: int, imageDir: str, record: bool = False, recordTime: int = 1, lineCheck: bool = True):
 		super(Worker,self).__init__()
 		self.address = address
-		self.width = width
-		self.height = height
 		self.monitorx = monitorx
 		self.monitory = monitory
 		self.fmt = fmt
@@ -85,8 +83,12 @@ class Worker(QtCore.QThread):
 
 
 
-		#aspect = nodes['Width'].value/nodes['Height'].value
-		aspect = array.shape[1]/array.shape[0]
+
+
+		self.width = array.shape[1]
+		self.height = array.shape[0]
+		aspect = self.width/self.height
+		print(array.shape)
 		crossThickness = 4
 		lineSize = 300
 		lineThickness = 3
@@ -109,7 +111,8 @@ class Worker(QtCore.QThread):
 		windowName = f'{self.address} (press stop to close)'
 		cv2.namedWindow(windowName)
 		cv2.moveWindow(windowName,self.screenwidth-self.monitorx - 20,self.screenheight - self.monitory-100)
-		num_channels=3
+		
+		num_channels=array.shape[2]
 		if num_channels == 3:
 			crossElement = np.array([0,0,255], dtype = np.uint8)
 		elif num_channels == 1:
@@ -117,11 +120,11 @@ class Worker(QtCore.QThread):
 
 		self.imageCountDown = 0
 
-
+		
 		while self.running:
 			# Used to display FPS on stream
 			curr_frame_time = time.time()
-
+			#array = np.random.randint(0,255,size=(500,800,3),dtype = np.uint8)
 
 			ret, array = video.read()
 
@@ -187,7 +190,8 @@ class Worker(QtCore.QThread):
 				break
 
 		cv2.destroyAllWindows()
-
+		del ret
+		del array
 		#system.destroy_device()
 		#print(1/np.average(buffertimes))
 		cycletimes = cycletimes[1:]
@@ -607,14 +611,8 @@ class Ui_MainWindow(object):
 		self.stopButton.setEnabled(True)
 		self.snapShotButton.setEnabled(True)
 		self.imageSeriesButton.setEnabled(True)
-		'''
-		width = self.xResBox.value()
-		height = self.yResBox.value()
-		ox = self.xOffsetBox.value()
-		oy = self.yOffsetBox.value()
-		'''
-		width = 1920
-		height = 1080
+
+
 		rtspAdress = self.rtspAdressBox.text()
 		monitorx = self.monitorxBox.value()
 		monitory = self.monitoryBox.value()
@@ -633,7 +631,7 @@ class Ui_MainWindow(object):
 		crossCheck = self.crossCheckBox.isChecked()
 		imageTime = self.imageSeriesTime.value()
 
-		self.thread = Worker(address= rtspAdress,width = width,height = height, monitorx = monitorx,monitory = monitory,
+		self.thread = Worker(address= rtspAdress, monitorx = monitorx,monitory = monitory,
 		manualfps = manualfps,fps = fps,gainAuto = gainAuto,gain = gain, fmt = colourFormat, screenwidth = self.screenwidth, screenheight=self.screenheight,
 		crosssize = crosssize,crossOffsetH = crossOffsetH, crossOffsetW = crossOffsetW, crossCheck = crossCheck, imageTime = imageTime, 
 		imageDir = self.snapshotDir,lineCheck=self.lineCheckBox.isChecked(), linePosition=self.linePositionBox.value())
