@@ -45,19 +45,22 @@ def applyGain(array,gain):
 	newarray = array*adjustedGain
 	newarray = np.where(newarray > 255, 255, newarray).astype(np.uint8)
 	return newarray
+def aspectAdjust(monx,mony,apsect):
+	if monx/mony <apsect: #adjusting the monitor x or y values based on the aspect ratio
+		mony = int(monx/apsect)
+	elif monx/mony > apsect:
+		monx = int(mony*apsect)
+	return monx, mony
 
 class Worker(QtCore.QThread):
-	def __init__(self,address:str, monitorx: int, monitory: int,manualfps: bool,fps: int, gainAuto: str, 
-	gain: float, fmt: str, screenwidth: int, screenheight: int, crosssize: int, crossOffsetH: int, crossOffsetW: int, crossCheck: bool, linePosition: int, 
+	def __init__(self,address:str, monitorx: int, monitory: int, gain: float,  screenwidth: int, frameSkip:int,
+			  screenheight: int, crosssize: int, crossOffsetH: int, crossOffsetW: int, crossCheck: bool, linePosition: int, 
 	imageTime: int, imageDir: str, record: bool = False, recordTime: int = 1, lineCheck: bool = True):
 		super(Worker,self).__init__()
 		self.address = address
 		self.monitorx = monitorx
 		self.monitory = monitory
-		self.fmt = fmt
-		self.manualfps = manualfps
-		self.fps = fps
-		self.gainAuto = gainAuto
+		self.frameSkip = frameSkip
 		self.gain = gain
 		self.screenwidth = screenwidth
 		self.screenheight = screenheight
@@ -97,20 +100,14 @@ class Worker(QtCore.QThread):
 
 		self.height = array.shape[0]
 		self.width = array.shape[1]
-		aspect = self.width/self.height
+		self.aspect = self.width/self.height
 		print(self.height,self.width)
 		crossThickness = 4
 		lineSize = 300
 		lineThickness = 3
 
 
-		if self.monitorx/self.monitory < aspect: #adjusting the monitor x or y values based on the aspect ratio
-			print('y-size doesn\'t fit aspect ratio, resizing')
-			self.monitory = int(self.monitorx/aspect)
-		elif self.monitorx/self.monitory > aspect:
-			print('x-size doesn\'t fit aspect ratio, resizing' )
-			self.monitorx = int(self.monitory*aspect)
-
+		self.monitorx,self.monitory = aspectAdjust(self.monitorx,self.monitory,self.aspect)
 
 		curr_frame_time = 0
 		prev_frame_time = 0
@@ -138,18 +135,18 @@ class Worker(QtCore.QThread):
 		while self.running:
 			# Used to display FPS on stream
 			curr_frame_time = time.time()
-			
+
 			#array = np.random.randint(0,255,size=(500,800,3),dtype = np.uint8)
 
 			ret = video.grab()
 
 			#ret, array = video.read()
 
-			if skipCount == 4: #skipping some frames to allow catch up
-				skipCount = 0
+			if skipCount != self.frameSkip: #skipping some frames to allow catch up
+				skipCount += 1
 				continue 
-
-			skipCount += 1
+			
+			skipCount = 0
 			ret, array = video.retrieve()
 
 			#frame, val = player.get_frame()
@@ -207,9 +204,7 @@ class Worker(QtCore.QThread):
 					self.imageCountDown = time.time()
 
 			cv2.imshow(windowName,resize)
-			#print(time.time()-tref)
-			#if frameCount == 99:
-			#	break
+
 
 			"""
 			Destroy the copied item to prevent memory leaks
@@ -369,49 +364,24 @@ class Ui_MainWindow(object):
 		self.aspectInfoLabel.setFont(smallLabelfont)
 		self.aspectInfoLabel.setObjectName("aspectInfoLabel")
 
-		self.colourBox = QtWidgets.QComboBox(self.centralwidget) #select colour format
-		self.colourBox.setGeometry(QtCore.QRect(box1x, int(3.5*boxOffset + box1pos[1]),*boxDimensions))
-		self.colourBox.setObjectName("colourBox")
-		self.colourBox.setFont(boxfont)
+		self.frameSkipBox = QtWidgets.QSpinBox(self.centralwidget) #select gain (if gainAuto is off)
+		self.frameSkipBox.setGeometry(QtCore.QRect(box1x, 5*boxOffset + box1pos[1],*boxDimensions))
+		self.frameSkipBox.setMinimum(1)
+		self.frameSkipBox.setMaximum(5)
+		self.frameSkipBox.setValue(2)
+		self.frameSkipBox.setObjectName("frameSkipBox")
+		self.frameSkipBox.setFont(boxfont)
+		self.frameSkipBox.valueChanged.connect(self.changeSkip)
 
-		self.colourBoxLabel = QtWidgets.QLabel(self.centralwidget)
-		self.colourBoxLabel.setFont(labelfont)
-		self.colourBoxLabel.setObjectName("colourBoxLabel")
-		self.colourBoxLabel.setGeometry(QtCore.QRect(labelxpos, int(3.5*boxOffset + box1pos[1]), 91, 16))
-
-		self.manualFPSBox = QtWidgets.QComboBox(self.centralwidget) #whether to set FPS manually or automatically
-		self.manualFPSBox.setGeometry(QtCore.QRect(box1x, 5*boxOffset + box1pos[1],*boxDimensions))
-		self.manualFPSBox.setObjectName("manualFPSBox")
-		self.manualFPSBox.setFont(boxfont)
-
-		self.manualFPSLabel = QtWidgets.QLabel(self.centralwidget)
-		self.manualFPSLabel.setGeometry(QtCore.QRect(box1x, int(4.5*boxOffset + box1pos[1]), 71, 16))
-		self.manualFPSLabel.setFont(labelfont)
-		self.manualFPSLabel.setObjectName("manualFPSLabel")
-
-		self.FPSBox = QtWidgets.QSpinBox(self.centralwidget) #select FPS (if manual selected)
-		self.FPSBox.setGeometry(QtCore.QRect(box2x, 5*boxOffset + box1pos[1],*boxDimensions))
-		self.FPSBox.setObjectName("FPSBox")
-		self.FPSBox.setFont(boxfont)
-
-		self.FPSLabel = QtWidgets.QLabel(self.centralwidget)
-		self.FPSLabel.setGeometry(QtCore.QRect(box2x, int(4.5*boxOffset + box1pos[1]), 71, 16))
-		self.FPSLabel.setFont(labelfont)
-		self.FPSLabel.setObjectName("FPSLabel")
-
-		self.gainAutoBox = QtWidgets.QComboBox(self.centralwidget) #choose whether to have gain chosen automatically or manually
-		self.gainAutoBox.setGeometry(QtCore.QRect(box1x, 6*boxOffset + box1pos[1], boxDimensions[0] + int(10*scaling), boxDimensions[1]))
-		self.gainAutoBox.setObjectName("gainAutoBox")
-		self.gainAutoBox.setFont(boxfont)
-
-		self.gainAutoLabel = QtWidgets.QLabel(self.centralwidget)
-		self.gainAutoLabel.setGeometry(QtCore.QRect(int(labelxpos+10*scaling), 6*boxOffset + box1pos[1], 61, 16))
-		self.gainAutoLabel.setObjectName("gainAutoLabel")
-		self.gainAutoLabel.setFont(labelfont)
+		self.frameSkipLabel = QtWidgets.QLabel(self.centralwidget)
+		self.frameSkipLabel.setGeometry(QtCore.QRect(labelxpos, 5*boxOffset + box1pos[1], 81, 31))
+		self.frameSkipLabel.setObjectName("frameSkipLabel")
+		self.frameSkipLabel.setFont(labelfont)	
+		self.frameSkipLabel.setText('frame skip frequencey\n(higher will reduce frame rate,\nbut keep latency low)')
+		self.frameSkipLabel.adjustSize()
 
 		self.gainBox = QtWidgets.QSpinBox(self.centralwidget) #select gain (if gainAuto is off)
 		self.gainBox.setGeometry(QtCore.QRect(box1x, 7*boxOffset + box1pos[1],*boxDimensions))
-		#self.gainBox.setDecimals(1)
 		self.gainBox.setMaximum(40)
 		self.gainBox.setObjectName("gainBox")
 		self.gainBox.setFont(boxfont)
@@ -598,35 +568,25 @@ class Ui_MainWindow(object):
 		MainWindow.setStatusBar(self.statusbar)
 
 
-		self.manualFPSBox.addItem('False')
-		self.manualFPSBox.addItem('True')
-		self.FPSBox.setValue(30)
+
 		self.gainBox.setValue(20)
-		self.gainAutoBox.addItem('Off')
-		self.gainAutoBox.addItem('Once')
-		self.gainAutoBox.addItem('Continuous')
-		self.colourBox.addItem('BGR8')
-		self.colourBox.addItem('Mono8')
 		self.retranslateUi(MainWindow)
 		QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
 		self.running = False
 		self.monitorxBox.setKeyboardTracking(False)
 		self.monitoryBox.setKeyboardTracking(False)
-		self.FPSBox.setKeyboardTracking(False)
+
 		self.gainBox.setKeyboardTracking(False)
 		self.crossSizeBox.setKeyboardTracking(False)
 		self.crossOffsetHBox.setKeyboardTracking(False)
 		self.crossOffsetWBox.setKeyboardTracking(False)
 		self.monitorxBox.valueChanged.connect(self.updateConfigLog)
 		self.monitoryBox.valueChanged.connect(self.updateConfigLog)
-		self.FPSBox.valueChanged.connect(self.updateConfigLog)
 		self.gainBox.valueChanged.connect(self.updateConfigLog)
 		self.crossSizeBox.valueChanged.connect(self.updateConfigLog)
 		self.crossOffsetHBox.valueChanged.connect(self.updateConfigLog)
 		self.crossOffsetWBox.valueChanged.connect(self.updateConfigLog)
-		self.colourBox.currentTextChanged.connect(self.updateConfigLog)
-		self.manualFPSBox.currentTextChanged.connect(self.updateConfigLog)
 		self.runButton.clicked.connect(self.start_worker)
 		self.stopButton.clicked.connect(self.stop_worker)
 		self.snapShotButton.clicked.connect(self.takeSingleImage)
@@ -638,15 +598,14 @@ class Ui_MainWindow(object):
 		self.crossOffsetHBox.valueChanged.connect(self.updateConfigLog)
 		self.crossOffsetWBox.valueChanged.connect(self.crossWChange)
 		self.crossOffsetWBox.valueChanged.connect(self.updateConfigLog)
+		self.monitorxBox.valueChanged.connect(self.changeMonitorx)
+		self.monitoryBox.valueChanged.connect(self.changeMonitory)
 		self.lockCrossPositionBox.stateChanged.connect(self.crossDisplayCheck)
 		self.lockCrossPositionBox.stateChanged.connect(self.updateConfigLog)
 		self.openDirectoryButton.clicked.connect(self.folderDialogue)
 		self.rtspAddressesBox.currentTextChanged.connect(self.changeAddress)
 		self.removeAddressButton.clicked.connect(self.removeAddress)
-		
-		#self.paramConfigList = [self.crossOffsetHBox, self.crossOffsetWBox,self.monitorxBox,self.monitoryBox,self.colourBox,
-		#	   self.manualFPSBox,self.FPSBox,self.xResBox,self.yResBox,self.xOffsetBox,self.yOffsetBox,self.directoryBox]
-		
+			
 		self.updateParamDct()
 		self.settingsLog = f'{homepath}/rtspGuiConfig/rtspGUIconfiguration.log'
 		self.addressLog = f'{homepath}/rtspGuiConfig/rtspAddresses.log'
@@ -669,17 +628,9 @@ class Ui_MainWindow(object):
 		self.aspectInfoLabel.setText(_translate("MainWindow", "aspect ratio of image on screen will be\n"
 "scaled automatically"))
 		self.aspectInfoLabel.adjustSize()
-		self.gainAutoLabel.setText(_translate("MainWindow", "Gain Auto"))
-		self.gainAutoLabel.adjustSize()
 		self.gainLabel.setText(_translate("MainWindow", "Gain (set Gain\n"
 "Auto to \'Off\')"))
 		self.gainLabel.adjustSize()
-		self.manualFPSLabel.setText(_translate("MainWindow", "Manual FPS"))
-		self.manualFPSLabel.adjustSize()
-		self.colourBoxLabel.setText(_translate("MainWindow","colour format"))
-		self.colourBoxLabel.adjustSize()
-		self.FPSLabel.setText(_translate("MainWindow", "FPS"))
-		self.FPSLabel.adjustSize()
 		self.stopButton.setText(_translate("MainWindow", "Stop"))
 
 	def start_worker(self):
@@ -693,14 +644,9 @@ class Ui_MainWindow(object):
 		rtspAdress = self.rtspAdressBox.text()
 		monitorx = self.monitorxBox.value()
 		monitory = self.monitoryBox.value()
-		if self.manualFPSBox.currentText() == 'True':		
-			manualfps = True		
-		elif self.manualFPSBox.currentText() == 'False':
-			manualfps = False		
-		fps = self.FPSBox.value()		
-		gainAuto = self.gainAutoBox.currentText()		
+		frameSkip = self.frameSkipBox.value()
 		gain = self.gainBox.value()		
-		colourFormat = self.colourBox.currentText()		
+	
 		
 		crosssize = self.crossSizeBox.value()		
 		crossOffsetH = self.crossOffsetHBox.value()		
@@ -709,7 +655,7 @@ class Ui_MainWindow(object):
 		imageTime = self.imageSeriesTime.value()
 
 		self.thread = Worker(address= rtspAdress, monitorx = monitorx,monitory = monitory,
-		manualfps = manualfps,fps = fps,gainAuto = gainAuto,gain = gain, fmt = colourFormat, screenwidth = self.screenwidth, screenheight=self.screenheight,
+		gain = gain, screenwidth = self.screenwidth, screenheight=self.screenheight, frameSkip = frameSkip,
 		crosssize = crosssize,crossOffsetH = crossOffsetH, crossOffsetW = crossOffsetW, crossCheck = crossCheck, imageTime = imageTime, 
 		imageDir = self.snapshotDir,lineCheck=self.lineCheckBox.isChecked(), linePosition=self.linePositionBox.value())
 
@@ -733,9 +679,6 @@ class Ui_MainWindow(object):
 						self.monitoryBox.objectName(): [self.monitoryBox,self.monitoryBox.value()],
 						self.gainBox.objectName(): [self.gainBox,self.gainBox.value()],
 						self.crossSizeBox.objectName(): [self.crossSizeBox, self.crossSizeBox.value()] ,
-						self.colourBox.objectName():[self.colourBox,self.colourBox.currentText()],
-						self.manualFPSBox.objectName():[self.manualFPSBox,self.manualFPSBox.currentText()],
-						self.FPSBox.objectName():[self.FPSBox,self.FPSBox.value()],
 						self.directoryBox.objectName():[self.directoryBox,self.directoryBox.text()],
 						self.linePositionBox.objectName():[self.linePositionBox,self.linePositionBox.value()],
 						self.lineCheckBox.objectName():[self.lineCheckBox,self.lineCheckBox.isChecked()]}
@@ -781,6 +724,9 @@ class Ui_MainWindow(object):
 	def changeGain(self):
 		if self.running:
 			self.thread.gain = self.gainBox.value()
+	def changeSkip(self):
+		if self.running:
+			self.thread.frameSkip = self.frameSkipBox.value()
 	def crossSizeChange(self):
 		if self.running:
 			self.thread.crosssize = self.crossSizeBox.value()
@@ -799,6 +745,24 @@ class Ui_MainWindow(object):
 	def lineCheckChange(self):
 		if self.running:
 			self.thread.lineCheck = self.lineCheckBox.isChecked()
+		
+	def changeMonitorx(self):
+		monx = self.monitorxBox.value()
+		mony = self.monitoryBox.value()
+		if self.running:
+			aspect = self.thread.aspect
+			monx,mony = aspectAdjust(monx,mony,aspect)
+			self.thread.monitorx = monx
+			self.thread.monitory = mony
+
+	def changeMonitory(self):
+		monx = self.monitorxBox.value()
+		mony = self.monitoryBox.value()
+		if self.running:
+			aspect = self.thread.aspect
+			monx,mony = aspectAdjust(monx,mony,aspect)
+			self.thread.monitory = mony
+			self.thread.monitorx = monx
 
 	def takeSingleImage(self):
 		if self.running:
@@ -853,6 +817,8 @@ class Ui_MainWindow(object):
 		for line in lines:
 			parname = line.split(';')[0]
 			parvalue = line.split(';')[1].replace('\n','')
+			if parname not in list(self.paramDct.keys()):
+				continue
 			if type(self.paramDct[parname][0]) == QtWidgets.QSpinBox:
 				self.paramDct[parname][0].setValue(int(parvalue))
 			elif type(self.paramDct[parname][0]) == QtWidgets.QDoubleSpinBox:
