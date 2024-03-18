@@ -55,7 +55,7 @@ def aspectAdjust(monx,mony,apsect):
 class Worker(QtCore.QThread):
 	def __init__(self,address:str, monitorx: int, monitory: int, gain: float,  screenwidth: int, frameSkip:int,
 			  screenheight: int, crosssize: int, crossOffsetH: int, crossOffsetW: int, crossCheck: bool, linePosition: int, 
-	imageTime: int, imageDir: str, record: bool = False, recordTime: int = 1, lineCheck: bool = True):
+	imageTime: int, imageDir: str, record: bool = False, recordTime: int = 1, lineCheck: bool = True, useGain:bool = True):
 		super(Worker,self).__init__()
 		self.address = address
 		self.monitorx = monitorx
@@ -77,6 +77,7 @@ class Worker(QtCore.QThread):
 		self.recordTime = recordTime
 		self.linePosition = linePosition
 		self.lineCheck = lineCheck
+		self.useGain = useGain
 
 	def run(self):
 		tries = 0
@@ -89,7 +90,6 @@ class Worker(QtCore.QThread):
 		
 		if ret == False:
 			print('stream not found')
-			self.terminate()
 			return
 
 
@@ -188,7 +188,8 @@ class Worker(QtCore.QThread):
 				array[self.linePosition:self.linePosition+lineThickness,self.crossOffsetW+ int(self.width/2-lineSize/2 + 1):self.crossOffsetW+ int(self.width/2+lineSize/2)] = crossElement
 			#fps = str(1/(curr_frame_time - prev_frame_time))
 			resize = cv2.resize(array,(self.monitorx,self.monitory))
-			resize = applyGain(resize,self.gain)
+			if self.useGain:
+				resize = applyGain(resize,self.gain)
 			#cv2.putText(resize, fps,textpos, cv2.FONT_HERSHEY_SIMPLEX, textsize, (100, 255, 0), 3, cv2.LINE_AA)
 			if self.snapshot:
 				dt = datetime.fromtimestamp(time.time())
@@ -385,6 +386,15 @@ class Ui_MainWindow(object):
 		self.gainBox.setMaximum(40)
 		self.gainBox.setObjectName("gainBox")
 		self.gainBox.setFont(boxfont)
+
+		self.gainCheck = QtWidgets.QCheckBox(self.centralwidget)
+		self.gainCheck.setGeometry(QtCore.QRect(box1x, int(6*boxOffset + box1pos[1]),int(10*scaling),int(10*scaling)))
+		self.gainCheck.setObjectName('gainCheck')
+		self.gainCheck.setText('use gain? (allows brightness\nto be adjusted, but reduces frame rate)')
+		self.gainCheck.setFont(labelfont)
+		self.gainCheck.setChecked(True)
+		self.gainCheck.adjustSize()
+		self.gainCheck.stateChanged.connect(self.changeGainCheck)
 
 		self.gainLabel = QtWidgets.QLabel(self.centralwidget)
 		self.gainLabel.setGeometry(QtCore.QRect(labelxpos, 7*boxOffset + box1pos[1], 81, 31))
@@ -646,7 +656,7 @@ class Ui_MainWindow(object):
 		monitory = self.monitoryBox.value()
 		frameSkip = self.frameSkipBox.value()
 		gain = self.gainBox.value()		
-	
+		useGain = self.gainCheck.isChecked()
 		
 		crosssize = self.crossSizeBox.value()		
 		crossOffsetH = self.crossOffsetHBox.value()		
@@ -657,7 +667,7 @@ class Ui_MainWindow(object):
 		self.thread = Worker(address= rtspAdress, monitorx = monitorx,monitory = monitory,
 		gain = gain, screenwidth = self.screenwidth, screenheight=self.screenheight, frameSkip = frameSkip,
 		crosssize = crosssize,crossOffsetH = crossOffsetH, crossOffsetW = crossOffsetW, crossCheck = crossCheck, imageTime = imageTime, 
-		imageDir = self.snapshotDir,lineCheck=self.lineCheckBox.isChecked(), linePosition=self.linePositionBox.value())
+		imageDir = self.snapshotDir,lineCheck=self.lineCheckBox.isChecked(), linePosition=self.linePositionBox.value(), useGain = useGain)
 
 		self.thread.start()
 		self.runButton.setEnabled(False)
@@ -724,6 +734,9 @@ class Ui_MainWindow(object):
 	def changeGain(self):
 		if self.running:
 			self.thread.gain = self.gainBox.value()
+	def changeGainCheck(self):
+		if self.running:
+			self.thread.useGain = self.gainCheck.isChecked()
 	def changeSkip(self):
 		if self.running:
 			self.thread.frameSkip = self.frameSkipBox.value()
