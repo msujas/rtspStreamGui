@@ -130,13 +130,28 @@ class Worker(QtCore.QThread):
 
 		self.imageCountDown = 0
 
-
+		skipCount = 0
+		frameCount = 0
+		t0 = time.time()
+		fpsCheckCount = 0
+		totalFPS = 0
 		while self.running:
 			# Used to display FPS on stream
 			curr_frame_time = time.time()
-			#array = np.random.randint(0,255,size=(500,800,3),dtype = np.uint8)
 			
-			ret, array = video.read()
+			#array = np.random.randint(0,255,size=(500,800,3),dtype = np.uint8)
+
+			ret = video.grab()
+
+			#ret, array = video.read()
+
+			if skipCount == 4: #skipping some frames to allow catch up
+				skipCount = 0
+				continue 
+
+			skipCount += 1
+			ret, array = video.retrieve()
+
 			#frame, val = player.get_frame()
 			'''
 			if frame is None:
@@ -147,7 +162,7 @@ class Worker(QtCore.QThread):
 			array = np.asarray(list(img.to_bytearray()[0])).reshape(self.height,self.width,3).astype(np.uint8)
 			array = array[:,:,::-1] #swap from rgb to bgr
 			'''
-			array = applyGain(array,self.gain)
+			
 			"""
 			Create a reshaped NumPy array to display using OpenCV
 			"""
@@ -176,7 +191,7 @@ class Worker(QtCore.QThread):
 				array[self.linePosition:self.linePosition+lineThickness,self.crossOffsetW+ int(self.width/2-lineSize/2 + 1):self.crossOffsetW+ int(self.width/2+lineSize/2)] = crossElement
 			#fps = str(1/(curr_frame_time - prev_frame_time))
 			resize = cv2.resize(array,(self.monitorx,self.monitory))
-
+			resize = applyGain(resize,self.gain)
 			#cv2.putText(resize, fps,textpos, cv2.FONT_HERSHEY_SIMPLEX, textsize, (100, 255, 0), 3, cv2.LINE_AA)
 			if self.snapshot:
 				dt = datetime.fromtimestamp(time.time())
@@ -190,15 +205,30 @@ class Worker(QtCore.QThread):
 					filename = f'{self.imageDir}/{dt.day:02d}_{dt.month:02d}_{dt.year}_{dt.hour:02d}{dt.minute:02d}{dt.second:02d}.png'
 					cv2.imwrite(filename, resize)
 					self.imageCountDown = time.time()
-			
+
 			cv2.imshow(windowName,resize)
+			#print(time.time()-tref)
+			#if frameCount == 99:
+			#	break
 
 			"""
 			Destroy the copied item to prevent memory leaks
 			"""
 			#BufferFactory.destroy(item)
 			
-			cycletimes = np.append(cycletimes,curr_frame_time-prev_frame_time)
+			#cycletimes = np.append(cycletimes,curr_frame_time-prev_frame_time)
+			frameCount += 1
+			if frameCount == 100: #checking the fps every 100 frames
+				frameCount = 0
+				t100 = time.time()
+				
+				fps = 100/(t100-t0)
+				t0 = time.time()
+				if fpsCheckCount == 0:
+					totalFPS = fps
+				else:
+					totalFPS = (totalFPS*fpsCheckCount + fps)/(fpsCheckCount+1)
+				fpsCheckCount += 1
 			prev_frame_time = curr_frame_time
 
 
@@ -215,8 +245,9 @@ class Worker(QtCore.QThread):
 		#del video
 		#system.destroy_device()
 		#print(1/np.average(buffertimes))
-		cycletimes = cycletimes[1:]
-		print(f'fps = {1/np.average(cycletimes)}, standard deviation = {np.std(1/cycletimes)}')
+		#cycletimes = cycletimes[1:]
+		#print(f'fps = {1/np.average(cycletimes)}, standard deviation = {np.std(1/cycletimes)}')
+		print(f'fps: {totalFPS}')
 		#self.terminate()
 		return
 
@@ -378,10 +409,10 @@ class Ui_MainWindow(object):
 		self.gainAutoLabel.setObjectName("gainAutoLabel")
 		self.gainAutoLabel.setFont(labelfont)
 
-		self.gainBox = QtWidgets.QDoubleSpinBox(self.centralwidget) #select gain (if gainAuto is off)
+		self.gainBox = QtWidgets.QSpinBox(self.centralwidget) #select gain (if gainAuto is off)
 		self.gainBox.setGeometry(QtCore.QRect(box1x, 7*boxOffset + box1pos[1],*boxDimensions))
-		self.gainBox.setDecimals(1)
-		self.gainBox.setMaximum(40.0)
+		#self.gainBox.setDecimals(1)
+		self.gainBox.setMaximum(40)
 		self.gainBox.setObjectName("gainBox")
 		self.gainBox.setFont(boxfont)
 
@@ -540,7 +571,7 @@ class Ui_MainWindow(object):
 		self.linePositionBox.setFont(boxfont)
 		self.linePositionBox.setMinimum(0)
 		self.linePositionBox.setMaximum(3000)
-		self.linePositionBox.setValue(1800)
+		self.linePositionBox.setValue(600)
 		self.linePositionBox.setSingleStep(1)
 		self.linePositionBox.setKeyboardTracking(False)
 		self.linePositionBox.valueChanged.connect(self.linePositionChange)
@@ -570,7 +601,7 @@ class Ui_MainWindow(object):
 		self.manualFPSBox.addItem('False')
 		self.manualFPSBox.addItem('True')
 		self.FPSBox.setValue(30)
-		self.gainBox.setValue(20.0)
+		self.gainBox.setValue(20)
 		self.gainAutoBox.addItem('Off')
 		self.gainAutoBox.addItem('Once')
 		self.gainAutoBox.addItem('Continuous')
