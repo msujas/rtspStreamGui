@@ -11,6 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import ctypes
 import numpy as np
 import cv2
+from ffpyplayer.player import MediaPlayer
 import time
 from datetime import datetime
 from pathlib import Path
@@ -76,26 +77,28 @@ class Worker(QtCore.QThread):
 
 	def run(self):
 		tries = 0
-		tries_max = 2
+		tries_max = 200
 		sleep_time_secs = 5
+		#self.gstAdress =  f"rtspsrc location={self.address} ! rtph265depay ! h265parse ! videoconvert ! appsink"
 		video = cv2.VideoCapture(self.address)
 		ret, array = video.read()
+		#player = MediaPlayer(self.address)
+		
 		if ret == False:
 			print('stream not found')
+			self.terminate()
 			return
+
+
 		pixelFormats =	{'Mono8':1, 'Mono10':1, 'Mono10p':1, 'Mono10Packed':1, 'Mono12':1, 'Mono12p':1,
 		'Mono12Packed':1, 'Mono16':1, 'BayerRG8':1, 'BayerRG10':1, 'BayerRG10p':1, 'BayerRG10Packed':1,
 		'BayerRG12':1, 'BayerRG12p':1, 'BayerRG12Packed':1, 'BayerRG16':1, 'RGB8':3, 'BGR8':3, 'YCbCr8':3,
 		'YCbCr8_CbYCr':3, 'YUV422_8':3, 'YUV422_8_UYVY':3, 'YCbCr411_8':3, 'YUV411_8_UYYVYY':3}
 
-
-
-
-
-		self.width = array.shape[1]
 		self.height = array.shape[0]
+		self.width = array.shape[1]
 		aspect = self.width/self.height
-		print(array.shape)
+		print(self.height,self.width)
 		crossThickness = 4
 		lineSize = 300
 		lineThickness = 3
@@ -119,7 +122,7 @@ class Worker(QtCore.QThread):
 		cv2.namedWindow(windowName)
 		cv2.moveWindow(windowName,self.screenwidth-self.monitorx - 20,self.screenheight - self.monitory-100)
 		
-		num_channels=array.shape[2]
+		num_channels= 3#array.shape[2]
 		if num_channels == 3:
 			crossElement = np.array([0,0,255], dtype = np.uint8)
 		elif num_channels == 1:
@@ -127,13 +130,23 @@ class Worker(QtCore.QThread):
 
 		self.imageCountDown = 0
 
-		
+
 		while self.running:
 			# Used to display FPS on stream
 			curr_frame_time = time.time()
 			#array = np.random.randint(0,255,size=(500,800,3),dtype = np.uint8)
-
+			
 			ret, array = video.read()
+			#frame, val = player.get_frame()
+			'''
+			if frame is None:
+				time.sleep(0.01)
+				continue
+			img, t = frame
+			
+			array = np.asarray(list(img.to_bytearray()[0])).reshape(self.height,self.width,3).astype(np.uint8)
+			array = array[:,:,::-1] #swap from rgb to bgr
+			'''
 			array = applyGain(array,self.gain)
 			"""
 			Create a reshaped NumPy array to display using OpenCV
@@ -184,6 +197,7 @@ class Worker(QtCore.QThread):
 			Destroy the copied item to prevent memory leaks
 			"""
 			#BufferFactory.destroy(item)
+			
 			cycletimes = np.append(cycletimes,curr_frame_time-prev_frame_time)
 			prev_frame_time = curr_frame_time
 
@@ -195,14 +209,15 @@ class Worker(QtCore.QThread):
 			key = cv2.waitKey(1)
 			if key == 27:
 				break
-
+		
 		cv2.destroyAllWindows()
-		del ret
-		del array
+		video.release()
+		#del video
 		#system.destroy_device()
 		#print(1/np.average(buffertimes))
 		cycletimes = cycletimes[1:]
 		print(f'fps = {1/np.average(cycletimes)}, standard deviation = {np.std(1/cycletimes)}')
+		#self.terminate()
 		return
 
 	def stop(self):
@@ -283,7 +298,7 @@ class Ui_MainWindow(object):
 		self.rtspAddressesBox.setFont(boxfont)
 
 		self.removeAddressButton = QtWidgets.QPushButton(self.centralwidget)
-		self.removeAddressButton.setGeometry(QtCore.QRect(box1x+10+lineBoxDimensions[0], int(1*boxOffset + box1pos[1]),*boxDimensions))
+		self.removeAddressButton.setGeometry(QtCore.QRect(box1x+10+lineBoxDimensions[0], int(0.9*boxOffset + box1pos[1]),*boxDimensions))
 		self.removeAddressButton.setObjectName("removeAddressButton")
 		self.removeAddressButton.setFont(boxfont)
 		self.removeAddressButton.setText('remove\naddress')
@@ -678,6 +693,7 @@ class Ui_MainWindow(object):
 		self.imageSeriesButton.setEnabled(False)
 		self.imageSeriesStopButton.setEnabled(False)
 		self.running = False
+
 	def updateParamDct(self):
 		self.paramDct = {self.rtspAdressBox.objectName(): [self.rtspAdressBox,self.rtspAdressBox.text()],
 						self.crossOffsetHBox.objectName(): [self.crossOffsetHBox,self.crossOffsetHBox.value()],
