@@ -11,7 +11,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import ctypes
 import numpy as np
 import cv2
-from ffpyplayer.player import MediaPlayer
+#from ffpyplayer.player import MediaPlayer
 import time
 from datetime import datetime
 from pathlib import Path
