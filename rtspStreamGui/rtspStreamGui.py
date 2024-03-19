@@ -425,6 +425,7 @@ class Ui_MainWindow(object):
 		self.crossCheckBox.setFont(labelfont)
 		self.crossCheckBox.setChecked(True)
 		self.crossCheckBox.adjustSize()
+		self.crossCheckBox.stateChanged.connect(self.crossCheckChange)
 
 		self.crossOffsetHBox =	QtWidgets.QSpinBox(self.centralwidget) #choose center position of cross in y
 		self.crossOffsetHBox.setGeometry(QtCore.QRect(box1x, 9*boxOffset + box1pos[1],*boxDimensions))
@@ -761,6 +762,10 @@ class Ui_MainWindow(object):
 	def lineCheckChange(self):
 		if self.running:
 			self.thread.lineCheck = self.lineCheckBox.isChecked()
+	
+	def crossCheckChange(self):
+		if self.running:
+			self.thread.crossCheck = self.crossCheckBox.isChecked()
 		
 	def changeMonitorx(self):
 		monx = self.monitorxBox.value()
