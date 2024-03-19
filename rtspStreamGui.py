@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'guilayout.ui'
-#
 # Created by: PyQt5 UI code generator 5.9.2
-#
-# WARNING! All changes made in this file will be lost!
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -141,9 +138,11 @@ class Worker(QtCore.QThread):
 			ret = video.grab()
 
 			#ret, array = video.read()
-
+			if skipCount > 6:
+				skipCount = 0
 			if skipCount != self.frameSkip: #skipping some frames to allow catch up
 				skipCount += 1
+
 				continue 
 			
 			skipCount = 0
@@ -367,7 +366,7 @@ class Ui_MainWindow(object):
 
 		self.frameSkipBox = QtWidgets.QSpinBox(self.centralwidget) #select gain (if gainAuto is off)
 		self.frameSkipBox.setGeometry(QtCore.QRect(box1x, 5*boxOffset + box1pos[1],*boxDimensions))
-		self.frameSkipBox.setMinimum(1)
+		self.frameSkipBox.setMinimum(0)
 		self.frameSkipBox.setMaximum(5)
 		self.frameSkipBox.setValue(2)
 		self.frameSkipBox.setObjectName("frameSkipBox")
@@ -375,7 +374,7 @@ class Ui_MainWindow(object):
 		self.frameSkipBox.valueChanged.connect(self.changeSkip)
 
 		self.frameSkipLabel = QtWidgets.QLabel(self.centralwidget)
-		self.frameSkipLabel.setGeometry(QtCore.QRect(labelxpos, 5*boxOffset + box1pos[1], 81, 31))
+		self.frameSkipLabel.setGeometry(QtCore.QRect(labelxpos, int(4.8*boxOffset + box1pos[1]), 81, 31))
 		self.frameSkipLabel.setObjectName("frameSkipLabel")
 		self.frameSkipLabel.setFont(labelfont)	
 		self.frameSkipLabel.setText('frame skip frequencey\n(higher will reduce frame rate,\nbut keep latency low)')
@@ -383,6 +382,7 @@ class Ui_MainWindow(object):
 
 		self.gainBox = QtWidgets.QSpinBox(self.centralwidget) #select gain (if gainAuto is off)
 		self.gainBox.setGeometry(QtCore.QRect(box1x, 7*boxOffset + box1pos[1],*boxDimensions))
+		self.gainBox.setMinimum(1)
 		self.gainBox.setMaximum(40)
 		self.gainBox.setObjectName("gainBox")
 		self.gainBox.setFont(boxfont)
@@ -390,7 +390,7 @@ class Ui_MainWindow(object):
 		self.gainCheck = QtWidgets.QCheckBox(self.centralwidget)
 		self.gainCheck.setGeometry(QtCore.QRect(box1x, int(6*boxOffset + box1pos[1]),int(10*scaling),int(10*scaling)))
 		self.gainCheck.setObjectName('gainCheck')
-		self.gainCheck.setText('use gain? (allows brightness\nto be adjusted, but reduces frame rate)')
+		self.gainCheck.setText('use gain? (allows brightness to be adjusted,\nbut reduces frame rate and introduces latency)')
 		self.gainCheck.setFont(labelfont)
 		self.gainCheck.setChecked(True)
 		self.gainCheck.adjustSize()
@@ -691,7 +691,9 @@ class Ui_MainWindow(object):
 						self.crossSizeBox.objectName(): [self.crossSizeBox, self.crossSizeBox.value()] ,
 						self.directoryBox.objectName():[self.directoryBox,self.directoryBox.text()],
 						self.linePositionBox.objectName():[self.linePositionBox,self.linePositionBox.value()],
-						self.lineCheckBox.objectName():[self.lineCheckBox,self.lineCheckBox.isChecked()]}
+						self.lineCheckBox.objectName():[self.lineCheckBox,self.lineCheckBox.isChecked()],
+						self.frameSkipBox.objectName():[self.frameSkipBox,self.frameSkipBox.value()],
+						self.gainCheck.objectName():[self.gainCheck,self.gainCheck.isChecked()]}
 	
 	def addAddress(self):
 		currentAddress = self.rtspAdressBox.text()
