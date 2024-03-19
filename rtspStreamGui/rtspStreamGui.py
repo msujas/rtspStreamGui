@@ -301,10 +301,10 @@ class Ui_MainWindow(object):
 		smallLabelfont = QtGui.QFont()
 		smallLabelfont.setPointSize(basefont-5)
 
-		self.rtspAdressBox = QtWidgets.QLineEdit(self.centralwidget)
-		self.rtspAdressBox.setGeometry(QtCore.QRect(box1x, int(0*boxOffset + box1pos[1]),*lineBoxDimensions))
-		self.rtspAdressBox.setObjectName("rtspAdressBox")
-		self.rtspAdressBox.setFont(boxfont)
+		self.rtspAddressBox = QtWidgets.QLineEdit(self.centralwidget)
+		self.rtspAddressBox.setGeometry(QtCore.QRect(box1x, int(0*boxOffset + box1pos[1]),*lineBoxDimensions))
+		self.rtspAddressBox.setObjectName("rtspAddressBox")
+		self.rtspAddressBox.setFont(boxfont)
 
 		self.rtspAdressLabel = QtWidgets.QLabel(self.centralwidget)
 		self.rtspAdressLabel.setGeometry(QtCore.QRect(box1x, int(-0.5*boxOffset + box1pos[1]), 111, 16))
@@ -586,6 +586,17 @@ class Ui_MainWindow(object):
 		QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
 		self.running = False
+
+		self.updateParamDct()
+		self.settingsLog = f'{homepath}/rtspGuiConfig/rtspGUIconfiguration.log'
+		self.addressLog = f'{homepath}/rtspGuiConfig/rtspAddresses.log'
+		if not os.path.exists(os.path.dirname(self.settingsLog)):
+			os.makedirs(os.path.dirname(self.settingsLog))
+		if os.path.exists(self.settingsLog):
+			self.readConfigLog()
+		if os.path.exists(self.addressLog):
+			self.readAddressLog()
+
 		self.monitorxBox.setKeyboardTracking(False)
 		self.monitoryBox.setKeyboardTracking(False)
 
@@ -618,15 +629,7 @@ class Ui_MainWindow(object):
 		self.rtspAddressesBox.currentTextChanged.connect(self.changeAddress)
 		self.removeAddressButton.clicked.connect(self.removeAddress)
 			
-		self.updateParamDct()
-		self.settingsLog = f'{homepath}/rtspGuiConfig/rtspGUIconfiguration.log'
-		self.addressLog = f'{homepath}/rtspGuiConfig/rtspAddresses.log'
-		if not os.path.exists(os.path.dirname(self.settingsLog)):
-			os.makedirs(os.path.dirname(self.settingsLog))
-		if os.path.exists(self.settingsLog):
-			self.readConfigLog()
-		if os.path.exists(self.addressLog):
-			self.readAddressLog()
+
 
 	def retranslateUi(self, MainWindow):
 		_translate = QtCore.QCoreApplication.translate
@@ -653,7 +656,7 @@ class Ui_MainWindow(object):
 		self.imageSeriesButton.setEnabled(True)
 		self.addAddress()
 
-		rtspAdress = self.rtspAdressBox.text()
+		rtspAdress = self.rtspAddressBox.text()
 		monitorx = self.monitorxBox.value()
 		monitory = self.monitoryBox.value()
 		frameSkip = self.frameSkipBox.value()
@@ -684,7 +687,7 @@ class Ui_MainWindow(object):
 		self.running = False
 
 	def updateParamDct(self):
-		self.paramDct = {self.rtspAdressBox.objectName(): [self.rtspAdressBox,self.rtspAdressBox.text()],
+		self.paramDct = {self.rtspAddressBox.objectName(): [self.rtspAddressBox,self.rtspAddressBox.text()],
 						self.crossOffsetHBox.objectName(): [self.crossOffsetHBox,self.crossOffsetHBox.value()],
 						self.crossOffsetWBox.objectName(): [self.crossOffsetWBox,self.crossOffsetWBox.value()],
 						self.monitorxBox.objectName(): [self.monitorxBox,self.monitorxBox.value()],
@@ -698,18 +701,18 @@ class Ui_MainWindow(object):
 						self.gainCheck.objectName():[self.gainCheck,self.gainCheck.isChecked()]}
 	
 	def addAddress(self):
-		currentAddress = self.rtspAdressBox.text()
+		currentAddress = self.rtspAddressBox.text()
 		allItems = [self.rtspAddressesBox.itemText(i) for i in 
 			  range(self.rtspAddressesBox.count())]
 		if not currentAddress in allItems:
-			self.rtspAddressesBox.addItem(self.rtspAdressBox.text())
+			self.rtspAddressesBox.addItem(self.rtspAddressBox.text())
 			self.rtspAddressesBox.setCurrentIndex(self.rtspAddressesBox.count()-1)
 			self.updateConfigLog()
 			self.updateAddressLog()
 
 	def changeAddress(self):
 		newAddress = self.rtspAddressesBox.currentText()
-		self.rtspAdressBox.setText(newAddress)
+		self.rtspAddressBox.setText(newAddress)
 		self.updateConfigLog()
 	
 	def updateAddressLog(self):
@@ -728,7 +731,7 @@ class Ui_MainWindow(object):
 		for item in allAdresses:
 			self.rtspAddressesBox.addItem('')
 			self.rtspAddressesBox.setItemText(self.rtspAddressesBox.count()-1,item)
-			if item == self.rtspAdressBox.text():
+			if item == self.rtspAddressBox.text():
 				self.rtspAddressesBox.setCurrentIndex(self.rtspAddressesBox.count()-1)
 	
 	def removeAddress(self):
