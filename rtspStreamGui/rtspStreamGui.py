@@ -124,7 +124,7 @@ class Worker(QtCore.QThread):
 
 		self.imageCountDown = 0
 
-		skipCount = 0
+		skipCount = -1
 		frameCount = 0
 		t0 = time.time()
 		fpsCheckCount = 0
@@ -138,14 +138,15 @@ class Worker(QtCore.QThread):
 			ret = video.grab()
 
 			#ret, array = video.read()
-			if skipCount > 6:
+			skipCount +=1
+			if skipCount > 9:
 				skipCount = 0
-			if skipCount != self.frameSkip: #skipping some frames to allow catch up
-				skipCount += 1
+			
+			if skipCount < self.frameSkip: #skipping some frames to allow catch up
 
 				continue 
 			
-			skipCount = 0
+			#skipCount = 0
 			ret, array = video.retrieve()
 
 			#frame, val = player.get_frame()
@@ -367,7 +368,7 @@ class Ui_MainWindow(object):
 		self.frameSkipBox = QtWidgets.QSpinBox(self.centralwidget) #select gain (if gainAuto is off)
 		self.frameSkipBox.setGeometry(QtCore.QRect(box1x, 5*boxOffset + box1pos[1],*boxDimensions))
 		self.frameSkipBox.setMinimum(0)
-		self.frameSkipBox.setMaximum(5)
+		self.frameSkipBox.setMaximum(9)
 		self.frameSkipBox.setValue(2)
 		self.frameSkipBox.setObjectName("frameSkipBox")
 		self.frameSkipBox.setFont(boxfont)
@@ -392,7 +393,7 @@ class Ui_MainWindow(object):
 		self.gainCheck.setObjectName('gainCheck')
 		self.gainCheck.setText('use gain? (allows brightness to be adjusted,\nbut reduces frame rate and introduces latency)')
 		self.gainCheck.setFont(labelfont)
-		self.gainCheck.setChecked(True)
+		self.gainCheck.setChecked(False)
 		self.gainCheck.adjustSize()
 		self.gainCheck.stateChanged.connect(self.changeGainCheck)
 
