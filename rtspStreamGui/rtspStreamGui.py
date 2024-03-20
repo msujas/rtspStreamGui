@@ -7,17 +7,13 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 import ctypes
 import numpy as np
-import cv2
+
 #from ffpyplayer.player import MediaPlayer
 import time
 from datetime import datetime
 from pathlib import Path
 import os, sys
-import PyQt5
 
-os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = os.fspath(
-    Path(PyQt5.__file__).resolve().parent / "Qt5" / "plugins"
-)
 
 def stringToBool(string):
 	if string == 'True':
@@ -81,6 +77,7 @@ class Worker(QtCore.QThread):
 		self.useGain = useGain
 
 	def run(self):
+		import cv2
 		tries = 0
 		tries_max = 200
 		sleep_time_secs = 5
