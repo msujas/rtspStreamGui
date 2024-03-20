@@ -13,7 +13,11 @@ import time
 from datetime import datetime
 from pathlib import Path
 import os, sys
+import PyQt5
 
+os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = os.fspath(
+    Path(PyQt5.__file__).resolve().parent / "Qt5" / "plugins"
+)
 
 def stringToBool(string):
 	if string == 'True':
