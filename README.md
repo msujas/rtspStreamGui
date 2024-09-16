@@ -4,6 +4,8 @@ Requires PyQt5, numpy and opencv-python. May also require FFPlay/FFMpeg installe
 
 Can be installed with 'pip install -e .', this should create an executable connected to the rtspStreamGui.py main() function in the 'Scripts' folder.
 
-![image](https://github.com/msujas/rtspStreamGui/assets/79653376/4072f734-de2b-431a-a9cb-0e50e9dec1e5)
+![image](https://github.com/msujas/rtspStreamGui/assets/79653376/6f228da4-7cfb-4e17-90b8-dfff4fe8db90)
 
-![image](https://github.com/msujas/rtspStreamGui/assets/79653376/3909f92f-3d6f-4b28-aff1-557be68ab0c3)
+![image](https://github.com/msujas/rtspStreamGui/assets/79653376/3ff0a3fd-56f9-4919-838e-b1327f2873f8)
+
+
