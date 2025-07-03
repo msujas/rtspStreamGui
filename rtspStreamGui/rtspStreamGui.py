@@ -4,8 +4,8 @@
 
 
 from PyQt6 import QtCore, QtGui, QtWidgets
-from .rtspWorker import Worker, aspectAdjust
-
+from .rtspWorker import Worker, aspectAdjust,NewWindow,  DummyWorker
+import cv2
 
 from pathlib import Path
 import os, sys
@@ -79,53 +79,59 @@ class Ui_MainWindow(object):
 		smallLabelfont = QtGui.QFont()
 		smallLabelfont.setPointSize(basefont-5)
 
-		self.rtspAddressBox = QtWidgets.QLineEdit(self.centralwidget)
-		self.rtspAddressBox.setGeometry(QtCore.QRect(box1x, int(0*boxOffset + box1pos[1]),*lineBoxDimensions))
+		self.rtspAddressBox = QtWidgets.QLineEdit()
+		#self.rtspAddressBox.setGeometry(QtCore.QRect(box1x, int(0*boxOffset + box1pos[1]),*lineBoxDimensions))
 		self.rtspAddressBox.setObjectName("rtspAddressBox")
 		self.rtspAddressBox.setFont(boxfont)
-		self.gridlayout.addWidget()
+		self.gridlayout.addWidget(self.rtspAddressBox, 1,0,1,2)
 
-		self.rtspAdressLabel = QtWidgets.QLabel(self.centralwidget)
-		self.rtspAdressLabel.setGeometry(QtCore.QRect(box1x, int(-0.5*boxOffset + box1pos[1]), 111, 16))
+		self.rtspAdressLabel = QtWidgets.QLabel()
+		#self.rtspAdressLabel.setGeometry(QtCore.QRect(box1x, int(-0.5*boxOffset + box1pos[1]), 111, 16))
 		self.rtspAdressLabel.setObjectName("rtspAdressLabel")
 		self.rtspAdressLabel.setFont(labelfont)
 		self.rtspAdressLabel.setText('rtsp address')
+		self.gridlayout.addWidget(self.rtspAdressLabel, 0,0)
 
-		self.rtspAdressesLabel = QtWidgets.QLabel(self.centralwidget)
-		self.rtspAdressesLabel.setGeometry(QtCore.QRect(box1x, int(0.6*boxOffset + box1pos[1]), 111, 16))
+		self.rtspAdressesLabel = QtWidgets.QLabel()
+		#self.rtspAdressesLabel.setGeometry(QtCore.QRect(box1x, int(0.6*boxOffset + box1pos[1]), 111, 16))
 		self.rtspAdressesLabel.setObjectName("rtspAdressesLabel")
 		self.rtspAdressesLabel.setFont(labelfont)
 		self.rtspAdressesLabel.setText('stored rtsp addresses')
 		self.rtspAdressesLabel.adjustSize()
+		self.gridlayout.addWidget(self.rtspAdressesLabel, 2,0)
 
-		self.rtspAddressesBox = QtWidgets.QComboBox(self.centralwidget)
-		self.rtspAddressesBox.setGeometry(QtCore.QRect(box1x, int(1*boxOffset + box1pos[1]),*lineBoxDimensions))
+		self.rtspAddressesBox = QtWidgets.QComboBox()
+		#self.rtspAddressesBox.setGeometry(QtCore.QRect(box1x, int(1*boxOffset + box1pos[1]),*lineBoxDimensions))
 		self.rtspAddressesBox.setObjectName("rtspAddressesBox")
 		self.rtspAddressesBox.setFont(boxfont)
+		self.gridlayout.addWidget(self.rtspAddressesBox, 3,0,1,2)
 
-		self.removeAddressButton = QtWidgets.QPushButton(self.centralwidget)
-		self.removeAddressButton.setGeometry(QtCore.QRect(box1x+10+lineBoxDimensions[0], int(0.9*boxOffset + box1pos[1]),*boxDimensions))
+		self.removeAddressButton = QtWidgets.QPushButton()
+		#self.removeAddressButton.setGeometry(QtCore.QRect(box1x+10+lineBoxDimensions[0], int(0.9*boxOffset + box1pos[1]),*boxDimensions))
 		self.removeAddressButton.setObjectName("removeAddressButton")
 		self.removeAddressButton.setFont(boxfont)
 		self.removeAddressButton.setText('remove\naddress')
 		self.removeAddressButton.adjustSize()
+		self.gridlayout.addWidget(self.removeAddressButton, 3,2)
 
-		self.monitorxBox = QtWidgets.QSpinBox(self.centralwidget) #select x size of image on screen (in pixels)
-		self.monitorxBox.setGeometry(QtCore.QRect(box1x, 2*boxOffset + box1pos[1],*boxDimensions))
+		self.monitorxBox = QtWidgets.QSpinBox() #select x size of image on screen (in pixels)
+		#self.monitorxBox.setGeometry(QtCore.QRect(box1x, 2*boxOffset + box1pos[1],*boxDimensions))
 		self.monitorxBox.setMinimum(100)
 		self.monitorxBox.setMaximum(3840)
 		#self.monitorxBox.setStepType(QtWidgets.QAbstractSpinBox.DefaultStepType)
 		self.monitorxBox.setProperty("value", 3000)
 		self.monitorxBox.setObjectName("monitorxBox")
 		self.monitorxBox.setFont(boxfont)
+		self.gridlayout.addWidget(self.monitorxBox, 5,0)
 
-		self.monitorxLabel = QtWidgets.QLabel(self.centralwidget)
-		self.monitorxLabel.setGeometry(QtCore.QRect(10, int(1.65*boxOffset + box1pos[1]), 111, 16))
+		self.monitorxLabel = QtWidgets.QLabel()
+		#self.monitorxLabel.setGeometry(QtCore.QRect(10, int(1.65*boxOffset + box1pos[1]), 111, 16))
 		self.monitorxLabel.setObjectName("monitorxLabel")
 		self.monitorxLabel.setFont(labelfont)
+		self.gridlayout.addWidget(self.monitorxLabel, 4,0)
 
-		self.monitoryBox = QtWidgets.QSpinBox(self.centralwidget) #select y size of image on screen (in pixels)
-		self.monitoryBox.setGeometry(QtCore.QRect(int(box2x+20*scaling), 2*boxOffset + box1pos[1],*boxDimensions))
+		self.monitoryBox = QtWidgets.QSpinBox() #select y size of image on screen (in pixels)
+		#self.monitoryBox.setGeometry(QtCore.QRect(int(box2x+20*scaling), 2*boxOffset + box1pos[1],*boxDimensions))
 		self.monitoryBox.setMinimum(100)
 		self.monitoryBox.setMaximum(3000)
 		self.monitoryBox.setSingleStep(1)
@@ -133,201 +139,234 @@ class Ui_MainWindow(object):
 		self.monitoryBox.setProperty("value", monydefault)
 		self.monitoryBox.setObjectName("monitoryBox")
 		self.monitoryBox.setFont(boxfont)
+		self.gridlayout.addWidget(self.monitoryBox,5,1)
 
-		self.monitoryLabel = QtWidgets.QLabel(self.centralwidget)
-		self.monitoryLabel.setGeometry(QtCore.QRect(int(box2x+20*scaling), int(1.65*boxOffset + box1pos[1]), 111, 16))
+		self.monitoryLabel = QtWidgets.QLabel()
+		#self.monitoryLabel.setGeometry(QtCore.QRect(int(box2x+20*scaling), int(1.65*boxOffset + box1pos[1]), 111, 16))
 		self.monitoryLabel.setObjectName("monitoryLabel")
 		self.monitoryLabel.setFont(labelfont)
+		self.gridlayout.addWidget(self.monitoryLabel,4,1)
 
-		self.aspectInfoLabel = QtWidgets.QLabel(self.centralwidget)
-		self.aspectInfoLabel.setGeometry(QtCore.QRect(box1x, int(2.7*boxOffset + box1pos[1]), 201, 41))
+		self.aspectInfoLabel = QtWidgets.QLabel()
 		self.aspectInfoLabel.setFont(smallLabelfont)
 		self.aspectInfoLabel.setObjectName("aspectInfoLabel")
+		self.gridlayout.addWidget(self.aspectInfoLabel,6,0,1,2)
 
-		self.frameSkipBox = QtWidgets.QSpinBox(self.centralwidget) #select gain (if gainAuto is off)
-		self.frameSkipBox.setGeometry(QtCore.QRect(box1x, 5*boxOffset + box1pos[1],*boxDimensions))
+		self.frameSkipBox = QtWidgets.QSpinBox() #select gain (if gainAuto is off)
+		#self.frameSkipBox.setGeometry(QtCore.QRect(box1x, 5*boxOffset + box1pos[1],*boxDimensions))
 		self.frameSkipBox.setMinimum(0)
 		self.frameSkipBox.setMaximum(9)
 		self.frameSkipBox.setValue(2)
 		self.frameSkipBox.setObjectName("frameSkipBox")
 		self.frameSkipBox.setFont(boxfont)
 		self.frameSkipBox.valueChanged.connect(self.changeSkip)
+		self.gridlayout.addWidget(self.frameSkipBox,7,0)
 
-		self.frameSkipLabel = QtWidgets.QLabel(self.centralwidget)
+		self.frameSkipLabel = QtWidgets.QLabel()
 		self.frameSkipLabel.setGeometry(QtCore.QRect(labelxpos, int(4.8*boxOffset + box1pos[1]), 81, 31))
 		self.frameSkipLabel.setObjectName("frameSkipLabel")
 		self.frameSkipLabel.setFont(labelfont)	
 		self.frameSkipLabel.setText('frame skip frequencey\n(higher will reduce frame rate,\nbut keep latency low)')
 		self.frameSkipLabel.adjustSize()
+		self.gridlayout.addWidget(self.frameSkipLabel,7,1,1,2)
 
-		self.gainBox = QtWidgets.QSpinBox(self.centralwidget) #select gain (if gainAuto is off)
-		self.gainBox.setGeometry(QtCore.QRect(box1x, 7*boxOffset + box1pos[1],*boxDimensions))
-		self.gainBox.setMinimum(1)
-		self.gainBox.setMaximum(40)
-		self.gainBox.setObjectName("gainBox")
-		self.gainBox.setFont(boxfont)
-
-		self.gainCheck = QtWidgets.QCheckBox(self.centralwidget)
-		self.gainCheck.setGeometry(QtCore.QRect(box1x, int(6*boxOffset + box1pos[1]),int(10*scaling),int(10*scaling)))
+		self.gainCheck = QtWidgets.QCheckBox()
+		#self.gainCheck.setGeometry(QtCore.QRect(box1x, int(6*boxOffset + box1pos[1]),int(10*scaling),int(10*scaling)))
 		self.gainCheck.setObjectName('gainCheck')
 		self.gainCheck.setText('use gain? (allows brightness to be adjusted,\nbut reduces frame rate and introduces latency)')
 		self.gainCheck.setFont(labelfont)
 		self.gainCheck.setChecked(False)
 		self.gainCheck.adjustSize()
 		self.gainCheck.stateChanged.connect(self.changeGainCheck)
+		self.gridlayout.addWidget(self.gainCheck,8,0,1,2)
 
-		self.gainLabel = QtWidgets.QLabel(self.centralwidget)
-		self.gainLabel.setGeometry(QtCore.QRect(labelxpos, 7*boxOffset + box1pos[1], 81, 31))
+		self.gainBox = QtWidgets.QSpinBox() #select gain (if gainAuto is off)
+		#self.gainBox.setGeometry(QtCore.QRect(box1x, 7*boxOffset + box1pos[1],*boxDimensions))
+		self.gainBox.setMinimum(1)
+		self.gainBox.setMaximum(40)
+		self.gainBox.setObjectName("gainBox")
+		self.gainBox.setFont(boxfont)
+		self.gridlayout.addWidget(self.gainBox,9,0)
+
+		self.gainLabel = QtWidgets.QLabel()
+		#self.gainLabel.setGeometry(QtCore.QRect(labelxpos, 7*boxOffset + box1pos[1], 81, 31))
 		self.gainLabel.setObjectName("gainLabel")
 		self.gainLabel.setFont(labelfont)
+		self.gridlayout.addWidget(self.gainLabel,9,1)
 
-		self.crossSizeBox =	 QtWidgets.QSpinBox(self.centralwidget) #select the size of the cross that is overlayed on the image
-		self.crossSizeBox.setGeometry(QtCore.QRect(box1x, 8*boxOffset + box1pos[1],*boxDimensions))
+		self.crossSizeLabel = QtWidgets.QLabel()
+		#self.crossSizeLabel.setGeometry(QtCore.QRect(box1x, int(7.65*boxOffset + box1pos[1]), 81, 31))
+		self.crossSizeLabel.setObjectName("crossSizeLabel")
+		self.crossSizeLabel.setText('cross size')
+		self.crossSizeLabel.setFont(labelfont)
+		self.crossSizeLabel.adjustSize()
+		self.gridlayout.addWidget(self.crossSizeLabel,10,0)
+
+		self.crossSizeBox =	 QtWidgets.QSpinBox() #select the size of the cross that is overlayed on the image
+		#self.crossSizeBox.setGeometry(QtCore.QRect(box1x, 8*boxOffset + box1pos[1],*boxDimensions))
 		self.crossSizeBox.setObjectName("crossSizeBox")
 		self.crossSizeBox.setFont(boxfont)
 		self.crossSizeBox.setMinimum(100)
 		self.crossSizeBox.setMaximum(2500)
 		self.crossSizeBox.setValue(700)
 		self.crossSizeBox.setSingleStep(10)
+		self.gridlayout.addWidget(self.crossSizeBox,11,0)
 
-		self.crossSizeLabel = QtWidgets.QLabel(self.centralwidget)
-		self.crossSizeLabel.setGeometry(QtCore.QRect(box1x, int(7.65*boxOffset + box1pos[1]), 81, 31))
-		self.crossSizeLabel.setObjectName("crossSizeLabel")
-		self.crossSizeLabel.setText('cross size')
-		self.crossSizeLabel.setFont(labelfont)
-		self.crossSizeLabel.adjustSize()
-
-		self.crossCheckBox =  QtWidgets.QCheckBox(self.centralwidget) #select whether or not to display the cross
-		self.crossCheckBox.setGeometry(QtCore.QRect(labelxpos, 8*boxOffset + box1pos[1],int(10*scaling),int(10*scaling)))
+		self.crossCheckBox =  QtWidgets.QCheckBox() #select whether or not to display the cross
+		#self.crossCheckBox.setGeometry(QtCore.QRect(labelxpos, 8*boxOffset + box1pos[1],int(10*scaling),int(10*scaling)))
 		self.crossCheckBox.setObjectName('crossCheckBox')
 		self.crossCheckBox.setText('display cross?')
 		self.crossCheckBox.setFont(labelfont)
 		self.crossCheckBox.setChecked(True)
 		self.crossCheckBox.adjustSize()
 		self.crossCheckBox.stateChanged.connect(self.crossCheckChange)
+		self.gridlayout.addWidget(self.crossCheckBox,11,1)
 
-		self.crossOffsetHBox =	QtWidgets.QSpinBox(self.centralwidget) #choose center position of cross in y
-		self.crossOffsetHBox.setGeometry(QtCore.QRect(box1x, 9*boxOffset + box1pos[1],*boxDimensions))
+		self.crossHLabel = QtWidgets.QLabel()
+		#self.crossHLabel.setGeometry(QtCore.QRect(box1x, int(8.6*boxOffset + box1pos[1]), 81, 31))
+		self.crossHLabel.setObjectName("crossHLabel")
+		self.crossHLabel.setText('cross y offset')
+		self.crossHLabel.setFont(labelfont)
+		self.crossHLabel.adjustSize()
+		self.gridlayout.addWidget(self.crossHLabel,12,0)
+
+		self.crossWLabel = QtWidgets.QLabel()
+		#self.crossWLabel.setGeometry(QtCore.QRect(30 + boxDimensions[0], int(8.6*boxOffset + box1pos[1]), 81, 31))
+		self.crossWLabel.setObjectName("crossWLabel")
+		self.crossWLabel.setText('cross x offset')
+		self.crossWLabel.setFont(labelfont)
+		self.crossWLabel.adjustSize()
+		self.gridlayout.addWidget(self.crossWLabel,12,1)
+
+		self.crossOffsetHBox =	QtWidgets.QSpinBox() #choose center position of cross in y
+		#self.crossOffsetHBox.setGeometry(QtCore.QRect(box1x, 9*boxOffset + box1pos[1],*boxDimensions))
 		self.crossOffsetHBox.setObjectName("crossOffsetHBox")
 		self.crossOffsetHBox.setFont(boxfont)
 		self.crossOffsetHBox.setMinimum(-1500)
 		self.crossOffsetHBox.setMaximum(1500)
 		self.crossOffsetHBox.setValue(0)
+		self.gridlayout.addWidget(self.crossOffsetHBox,13,0)
 
-		self.crossHLabel = QtWidgets.QLabel(self.centralwidget)
-		self.crossHLabel.setGeometry(QtCore.QRect(box1x, int(8.6*boxOffset + box1pos[1]), 81, 31))
-		self.crossHLabel.setObjectName("crossHLabel")
-		self.crossHLabel.setText('cross y offset')
-		self.crossHLabel.setFont(labelfont)
-		self.crossHLabel.adjustSize()
-
-		self.crossOffsetWBox =	QtWidgets.QSpinBox(self.centralwidget) #choose center position of cross in x
-		self.crossOffsetWBox.setGeometry(QtCore.QRect(30 + boxDimensions[0], 9*boxOffset + box1pos[1],*boxDimensions))
+		self.crossOffsetWBox =	QtWidgets.QSpinBox() #choose center position of cross in x
+		#self.crossOffsetWBox.setGeometry(QtCore.QRect(30 + boxDimensions[0], 9*boxOffset + box1pos[1],*boxDimensions))
 		self.crossOffsetWBox.setObjectName("crossOffsetWBox")
 		self.crossOffsetWBox.setFont(boxfont)
 		self.crossOffsetWBox.setMinimum(-1500)
 		self.crossOffsetWBox.setMaximum(1500)
 		self.crossOffsetWBox.setValue(0)
+		self.gridlayout.addWidget(self.crossOffsetWBox,13,1)
 
-		self.crossWLabel = QtWidgets.QLabel(self.centralwidget)
-		self.crossWLabel.setGeometry(QtCore.QRect(30 + boxDimensions[0], int(8.6*boxOffset + box1pos[1]), 81, 31))
-		self.crossWLabel.setObjectName("crossWLabel")
-		self.crossWLabel.setText('cross x offset')
-		self.crossWLabel.setFont(labelfont)
-		self.crossWLabel.adjustSize()
 
-		self.lockCrossPositionBox =  QtWidgets.QCheckBox(self.centralwidget) #select whether or not to display the cross
-		self.lockCrossPositionBox.setGeometry(QtCore.QRect(2*boxDimensions[0] + 40, int(8.9*boxOffset + box1pos[1]),int(10*scaling),int(10*scaling)))
+
+		self.lockCrossPositionBox =  QtWidgets.QCheckBox() #select whether or not to display the cross
+		#self.lockCrossPositionBox.setGeometry(QtCore.QRect(2*boxDimensions[0] + 40, int(8.9*boxOffset + box1pos[1]),int(10*scaling),int(10*scaling)))
 		self.lockCrossPositionBox.setObjectName('lockCrossPositionBox')
 		self.lockCrossPositionBox.setText('lock cross\nposition')
 		self.lockCrossPositionBox.setFont(labelfont)
 		self.lockCrossPositionBox.setChecked(True)
 		self.lockCrossPositionBox.adjustSize()
+		self.gridlayout.addWidget(self.lockCrossPositionBox,13,2)
 
 		if self.lockCrossPositionBox.isChecked():
 			self.crossOffsetWBox.setEnabled(False)
 			self.crossOffsetHBox.setEnabled(False)
 
-		self.runButton = QtWidgets.QPushButton(self.centralwidget)
-		self.runButton.setGeometry(QtCore.QRect(box1x, 10*boxOffset + box1pos[1], int(130*scaling), int(40*scaling)))
+		self.runButton = QtWidgets.QPushButton()
+		#self.runButton.setGeometry(QtCore.QRect(box1x, 10*boxOffset + box1pos[1], int(130*scaling), int(40*scaling)))
 		self.runButton.setFont(font)
 		self.runButton.setObjectName("runButton")
+		self.runButton.setMinimumHeight(int(50*scaling))
+		self.gridlayout.addWidget(self.runButton,14,0,1,2)
 
-		self.stopButton = QtWidgets.QPushButton(self.centralwidget)
-		self.stopButton.setGeometry(QtCore.QRect(box1x + int(130*scaling) + 10, 10*boxOffset + box1pos[1], 75, 23))
+		self.stopButton = QtWidgets.QPushButton()
+		#self.stopButton.setGeometry(QtCore.QRect(box1x + int(130*scaling) + 10, 10*boxOffset + box1pos[1], 75, 23))
 		self.stopButton.setObjectName("stopButton")
 		self.stopButton.setFont(font)
 		self.stopButton.adjustSize()
 		self.stopButton.setEnabled(False)
+		self.gridlayout.addWidget(self.stopButton,14,2)
 
-		self.snapShotButton = QtWidgets.QPushButton(self.centralwidget)
-		self.snapShotButton.setGeometry(QtCore.QRect(box1x, int(11.2*boxOffset + box1pos[1]), int(130*scaling), int(40*scaling)))
+		self.snapShotButton = QtWidgets.QPushButton()
+		#self.snapShotButton.setGeometry(QtCore.QRect(box1x, int(11.2*boxOffset + box1pos[1]), int(130*scaling), int(40*scaling)))
 		self.snapShotButton.setFont(labelfont)
 		self.snapShotButton.setObjectName("snapShotButton")
 		self.snapShotButton.setText('take single image')
 		self.snapShotButton.adjustSize()
 		self.snapShotButton.setEnabled(False)
+		self.gridlayout.addWidget(self.snapShotButton,15,0)
 
-		self.imageSeriesButton = QtWidgets.QPushButton(self.centralwidget)
-		self.imageSeriesButton.setGeometry(QtCore.QRect(box1x, int(12*boxOffset + box1pos[1]), int(130*scaling), int(40*scaling)))
+		self.imageSeriesButton = QtWidgets.QPushButton()
+		#self.imageSeriesButton.setGeometry(QtCore.QRect(box1x, int(12*boxOffset + box1pos[1]), int(130*scaling), int(40*scaling)))
 		self.imageSeriesButton.setFont(labelfont)
 		self.imageSeriesButton.setObjectName("imageSeriesButton")
 		self.imageSeriesButton.setText('take image series')
 		self.imageSeriesButton.adjustSize()
 		self.imageSeriesButton.setEnabled(False)
+		self.gridlayout.addWidget(self.imageSeriesButton,16,0)
 
-		self.imageSeriesTime = QtWidgets.QSpinBox(self.centralwidget)
-		self.imageSeriesTime.setGeometry(QtCore.QRect(int(box2x + 10*scaling), int(12*boxOffset + box1pos[1]), int(50*scaling), boxDimensions[1]))
+		self.imageSeriesTime = QtWidgets.QSpinBox()
+		#self.imageSeriesTime.setGeometry(QtCore.QRect(int(box2x + 10*scaling), int(12*boxOffset + box1pos[1]), int(50*scaling), boxDimensions[1]))
 		self.imageSeriesTime.setFont(labelfont)
 		self.imageSeriesTime.setObjectName("imageSeriesTime")
 		self.imageSeriesTime.setMinimum(1)
 		self.imageSeriesTime.setMaximum(3600)
 		self.imageSeriesTime.setValue(1800)
 		self.imageSeriesTime.setSingleStep(60)
+		self.gridlayout.addWidget(self.imageSeriesTime,16,1)
 
-		self.imageSeriesTimeLabel = QtWidgets.QLabel(self.centralwidget)
-		self.imageSeriesTimeLabel.setGeometry(QtCore.QRect(int(box2x + 70*scaling), int(12*boxOffset + box1pos[1]), int(60*scaling), int(40*scaling)))
+		self.imageSeriesTimeLabel = QtWidgets.QLabel()
+		#self.imageSeriesTimeLabel.setGeometry(QtCore.QRect(int(box2x + 70*scaling), int(12*boxOffset + box1pos[1]), int(60*scaling), int(40*scaling)))
 		self.imageSeriesTimeLabel.setFont(labelfont)
 		self.imageSeriesTimeLabel.setObjectName("imageSeriesTimeLabel")
 		self.imageSeriesTimeLabel.setText('series time period\n(seconds)')
 		self.imageSeriesTimeLabel.adjustSize()
+		self.gridlayout.addWidget(self.imageSeriesTimeLabel,16,2)
 
-		self.imageSeriesStopButton = QtWidgets.QPushButton(self.centralwidget)
-		self.imageSeriesStopButton.setGeometry(QtCore.QRect(box1x, int(12.8*boxOffset + box1pos[1]), int(130*scaling), int(40*scaling)))
+		self.imageSeriesStopButton = QtWidgets.QPushButton()
+		#self.imageSeriesStopButton.setGeometry(QtCore.QRect(box1x, int(12.8*boxOffset + box1pos[1]), int(130*scaling), int(40*scaling)))
 		self.imageSeriesStopButton.setFont(labelfont)
 		self.imageSeriesStopButton.setObjectName("imageSeriesStopButton")
 		self.imageSeriesStopButton.setText('stop image series')
 		self.imageSeriesStopButton.adjustSize()
 		self.imageSeriesStopButton.setEnabled(False)
+		self.gridlayout.addWidget(self.imageSeriesStopButton,17,0)
 
-		self.directoryBox = QtWidgets.QLineEdit(self.centralwidget)
-		self.directoryBox.setGeometry(QtCore.QRect(box1x, int(box1pos[1]+14*boxOffset),int(boxDimensions[0]*2),boxDimensions[1]))
-		self.directoryBox.setObjectName("directoryBox")
-		self.directoryBox.setFont(boxfont)
-		self.directoryBox.setText(self.snapshotDir)
-
-		self.openDirectoryButton = QtWidgets.QPushButton(self.centralwidget)
-		self.openDirectoryButton.setGeometry(QtCore.QRect(int(box1x + 10*scaling + boxDimensions[0]*2), int(box1pos[1]+14*boxOffset),boxDimensions[1],boxDimensions[1]))
-		self.openDirectoryButton.setObjectName("openDirectoryButton")
-		self.openDirectoryButton.setFont(boxfont)
-		self.openDirectoryButton.setText('...')
-
-		self.directoryLabel = QtWidgets.QLabel(self.centralwidget)
-		self.directoryLabel.setGeometry(QtCore.QRect(box1x, int(box1pos[1]+13.65*boxOffset),int(boxDimensions[0]*2),boxDimensions[1]))
+		self.directoryLabel = QtWidgets.QLabel()
+		#self.directoryLabel.setGeometry(QtCore.QRect(box1x, int(box1pos[1]+13.65*boxOffset),int(boxDimensions[0]*2),boxDimensions[1]))
 		self.directoryLabel.setObjectName('directoryLabel')
 		self.directoryLabel.setText('image directory')
 		self.directoryLabel.setFont(labelfont)
 		self.directoryLabel.adjustSize()
+		self.gridlayout.addWidget(self.directoryLabel,18,0)
 
-		self.linePositionLabel = QtWidgets.QLabel(self.centralwidget)
-		self.linePositionLabel.setGeometry(QtCore.QRect(box1x, int(14.7*boxOffset + box1pos[1]),*boxDimensions))
+		self.directoryBox = QtWidgets.QLineEdit()
+		#self.directoryBox.setGeometry(QtCore.QRect(box1x, int(box1pos[1]+14*boxOffset),int(boxDimensions[0]*2),boxDimensions[1]))
+		self.directoryBox.setObjectName("directoryBox")
+		self.directoryBox.setFont(boxfont)
+		self.directoryBox.setText(self.snapshotDir)
+		self.gridlayout.addWidget(self.directoryBox,19,0,1,2)
+
+		self.openDirectoryButton = QtWidgets.QPushButton()
+		#self.openDirectoryButton.setGeometry(QtCore.QRect(int(box1x + 10*scaling + boxDimensions[0]*2), int(box1pos[1]+14*boxOffset),boxDimensions[1],boxDimensions[1]))
+		self.openDirectoryButton.setObjectName("openDirectoryButton")
+		self.openDirectoryButton.setFont(boxfont)
+		self.openDirectoryButton.setText('...')
+		self.openDirectoryButton.setMaximumWidth(int(30*scaling))
+
+		self.gridlayout.addWidget(self.openDirectoryButton,19,2)
+
+
+
+		self.linePositionLabel = QtWidgets.QLabel()
+		#self.linePositionLabel.setGeometry(QtCore.QRect(box1x, int(14.7*boxOffset + box1pos[1]),*boxDimensions))
 		self.linePositionLabel.setObjectName('linePositionLabel')
 		self.linePositionLabel.setText('line position')
 		self.linePositionLabel.setFont(labelfont)
 		self.linePositionLabel.adjustSize()
+		self.gridlayout.addWidget(self.linePositionLabel,20,0)
 
-		self.linePositionBox =	 QtWidgets.QSpinBox(self.centralwidget) #select the size of the cross that is overlayed on the image
-		self.linePositionBox.setGeometry(QtCore.QRect(box1x, 15*boxOffset + box1pos[1],*boxDimensions))
+		self.linePositionBox =	 QtWidgets.QSpinBox() #select the size of the cross that is overlayed on the image
+		#self.linePositionBox.setGeometry(QtCore.QRect(box1x, 15*boxOffset + box1pos[1],*boxDimensions))
 		self.linePositionBox.setObjectName("linePositionBox")
 		self.linePositionBox.setFont(boxfont)
 		self.linePositionBox.setMinimum(0)
@@ -337,9 +376,10 @@ class Ui_MainWindow(object):
 		self.linePositionBox.setKeyboardTracking(False)
 		self.linePositionBox.valueChanged.connect(self.linePositionChange)
 		self.linePositionBox.valueChanged.connect(self.updateConfigLog)
+		self.gridlayout.addWidget(self.linePositionBox,21,0)
 
-		self.lineCheckBox =  QtWidgets.QCheckBox(self.centralwidget) #select whether or not to display the cross
-		self.lineCheckBox.setGeometry(QtCore.QRect(labelxpos, 15*boxOffset + box1pos[1],int(10*scaling),int(10*scaling)))
+		self.lineCheckBox =  QtWidgets.QCheckBox() #select whether or not to display the cross
+		#self.lineCheckBox.setGeometry(QtCore.QRect(labelxpos, 15*boxOffset + box1pos[1],int(10*scaling),int(10*scaling)))
 		self.lineCheckBox.setObjectName('lineCheckBox')
 		self.lineCheckBox.setText('display line?')
 		self.lineCheckBox.setFont(labelfont)
@@ -347,6 +387,9 @@ class Ui_MainWindow(object):
 		self.lineCheckBox.adjustSize()
 		self.lineCheckBox.stateChanged.connect(self.lineCheckChange)
 		self.lineCheckBox.stateChanged.connect(self.updateConfigLog)
+		self.gridlayout.addWidget(self.lineCheckBox,21,1)
+
+		self.centralwidget.setLayout(self.gridlayout)
 
 		MainWindow.setCentralWidget(self.centralwidget)
 		MainWindow.setCentralWidget(self.centralwidget)
@@ -419,7 +462,7 @@ class Ui_MainWindow(object):
 		self.monitorxLabel.adjustSize()
 		self.monitoryLabel.setText(_translate("MainWindow", "y image size on screen"))
 		self.monitoryLabel.adjustSize()
-		self.aspectInfoLabel.setText(_translate("MainWindow", "aspect ratio of image on screen will be\n"
+		self.aspectInfoLabel.setText(_translate("MainWindow", "aspect ratio of image on screen will be "
 "scaled automatically"))
 		self.aspectInfoLabel.adjustSize()
 		self.gainLabel.setText(_translate("MainWindow", "Gain (set Gain\n"
@@ -453,19 +496,38 @@ class Ui_MainWindow(object):
 		crosssize = crosssize,crossOffsetH = crossOffsetH, crossOffsetW = crossOffsetW, crossCheck = crossCheck, imageTime = imageTime, 
 		imageDir = self.snapshotDir,lineCheck=self.lineCheckBox.isChecked(), linePosition=self.linePositionBox.value(), useGain = useGain)
 
+		self.windowName = f'{rtspAdress} (press stop to close)'
+		cv2.namedWindow(self.windowName)
+		#cv2.moveWindow(self.windowName,self.screenwidth-monitorx - 20,self.screenheight - monitory-100)
+
+		#self.newWindow = NewWindow()
+		#self.newWindow.setWindowTitle(rtspAdress)
+		
+		#self.newWindow.show()
+		#self.worker= DummyWorker()
 		
 		self.thread = QtCore.QThread()
 		self.worker.moveToThread(self.thread)
 		self.thread.started.connect(self.worker.run)
+		self.worker.output.connect(self.windowUpdate)
 		#self.worker.finished.connect(self.thread.quit)
 		#self.worker.finished.connect(self.worker.deleteLater)
 		self.thread.start()
 		self.runButton.setEnabled(False)
+	
+	def windowUpdate(self, image):
+		
+		if self.running:
+			cv2.imshow(self.windowName,image)
+			#self.newWindow.frame.setPixmap(image)
+	
 
 	def stop_worker(self):
 		self.worker.stop()
 		self.thread.quit()
 		self.worker.deleteLater()
+		#self.newWindow.close()
+		cv2.destroyAllWindows()
 		self.runButton.setEnabled(True)
 		self.stopButton.setEnabled(False)
 		self.snapShotButton.setEnabled(False)
@@ -527,69 +589,69 @@ class Ui_MainWindow(object):
 
 	def changeGain(self):
 		if self.running:
-			self.thread.gain = self.gainBox.value()
+			self.worker.gain = self.gainBox.value()
 	def changeGainCheck(self):
 		if self.running:
-			self.thread.useGain = self.gainCheck.isChecked()
+			self.worker.useGain = self.gainCheck.isChecked()
 	def changeSkip(self):
 		if self.running:
-			self.thread.frameSkip = self.frameSkipBox.value()
+			self.worker.frameSkip = self.frameSkipBox.value()
 	def crossSizeChange(self):
 		if self.running:
-			self.thread.crosssize = self.crossSizeBox.value()
+			self.worker.crosssize = self.crossSizeBox.value()
 	def crossHChange(self):
 		if self.running:
-			self.thread.crossOffsetH = self.crossOffsetHBox.value()
+			self.worker.crossOffsetH = self.crossOffsetHBox.value()
 
 	def crossWChange(self):
 		if self.running:
-			self.thread.crossOffsetW = self.crossOffsetWBox.value()
+			self.worker.crossOffsetW = self.crossOffsetWBox.value()
 	
 	def linePositionChange(self):
 		if self.running:
-			self.thread.linePosition = self.linePositionBox.value()
+			self.worker.linePosition = self.linePositionBox.value()
 	
 	def lineCheckChange(self):
 		if self.running:
-			self.thread.lineCheck = self.lineCheckBox.isChecked()
+			self.worker.lineCheck = self.lineCheckBox.isChecked()
 	
 	def crossCheckChange(self):
 		if self.running:
-			self.thread.crossCheck = self.crossCheckBox.isChecked()
+			self.worker.crossCheck = self.crossCheckBox.isChecked()
 		
 	def changeMonitorx(self):
 		monx = self.monitorxBox.value()
 		mony = self.monitoryBox.value()
 		if self.running:
-			aspect = self.thread.aspect
+			aspect = self.worker.aspect
 			monx,mony = aspectAdjust(monx,mony,aspect)
-			self.thread.monitorx = monx
-			self.thread.monitory = mony
+			self.worker.monitorx = monx
+			self.worker.monitory = mony
 
 	def changeMonitory(self):
 		monx = self.monitorxBox.value()
 		mony = self.monitoryBox.value()
 		if self.running:
-			aspect = self.thread.aspect
+			aspect = self.worker.aspect
 			monx,mony = aspectAdjust(monx,mony,aspect)
-			self.thread.monitory = mony
-			self.thread.monitorx = monx
+			self.worker.monitory = mony
+			self.worker.monitorx = monx
 
 	def takeSingleImage(self):
 		if self.running:
-			self.thread.snapshot = True
+			self.worker.snapshot = True
 
 	def takeImageSeries(self):
 		if self.running:
-			self.thread.imageSeries = True
-			self.thread.imageTime = self.imageSeriesTime.value()
-			self.thread.imageCountDown = 0
+			self.worker.imageSeries = True
+			self.worker.imageTime = self.imageSeriesTime.value()
+			self.worker.imageCountDown = 0
 			self.imageSeriesButton.setEnabled(False)
 			self.imageSeriesStopButton.setEnabled(True)
 
 	def stopImageSeries(self):
 		if self.running:
-			self.thread.imageSeries = False
+			self.worker.imageSeries = False
 			self.imageSeriesButton.setEnabled(True)
 			self.imageSeriesStopButton.setEnabled(False)
 	def crossDisplayCheck(self):
@@ -612,7 +674,7 @@ class Ui_MainWindow(object):
 			#f.close()
 			self.updateConfigLog()
 			if self.running:
-				self.thread.imageDir = folder
+				self.worker.imageDir = folder
 	def updateConfigLog(self):
 		self.updateParamDct()
 		logUpdate = ''

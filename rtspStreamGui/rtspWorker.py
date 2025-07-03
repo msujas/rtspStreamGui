@@ -1,5 +1,5 @@
 import cv2
-from PyQt6 import QtCore
+from PyQt6 import QtCore, QtWidgets, QtGui
 import numpy as np
 import time
 from datetime import datetime
@@ -20,6 +20,8 @@ def aspectAdjust(monx,mony,apsect):
 	return monx, mony
 
 class Worker(QtCore.QObject):
+	#output = QtCore.pyqtSignal(QtGui.QPixmap)
+	output = QtCore.pyqtSignal(np.ndarray)
 	def __init__(self,address:str, monitorx: int, monitory: int, gain: float,  screenwidth: int, frameSkip:int,
 			  screenheight: int, crosssize: int, crossOffsetH: int, crossOffsetW: int, crossCheck: bool, linePosition: int, 
 	imageTime: int, imageDir: str, record: bool = False, recordTime: int = 1, lineCheck: bool = True, useGain:bool = True):
@@ -83,9 +85,9 @@ class Worker(QtCore.QObject):
 		cycletimes = np.array([])
 
 		print(f'monitorx {self.monitorx}, monitory {self.monitory}')
-		windowName = f'{self.address} (press stop to close)'
-		cv2.namedWindow(windowName)
-		cv2.moveWindow(windowName,self.screenwidth-self.monitorx - 20,self.screenheight - self.monitory-100)
+		#windowName = f'{self.address} (press stop to close)'
+		#cv2.namedWindow(windowName)
+		#cv2.moveWindow(windowName,self.screenwidth-self.monitorx - 20,self.screenheight - self.monitory-100)
 		
 		num_channels= 3#array.shape[2]
 		if num_channels == 3:
@@ -120,16 +122,6 @@ class Worker(QtCore.QObject):
 			ret, array = video.retrieve()
 
 			#frame, val = player.get_frame()
-			'''
-			if frame is None:
-				time.sleep(0.01)
-				continue
-			img, t = frame
-			
-			array = np.asarray(list(img.to_bytearray()[0])).reshape(self.height,self.width,3).astype(np.uint8)
-			array = array[:,:,::-1] #swap from rgb to bgr
-			'''
-			
 			"""
 			Create a reshaped NumPy array to display using OpenCV
 			"""
@@ -174,7 +166,13 @@ class Worker(QtCore.QObject):
 					cv2.imwrite(filename, resize)
 					self.imageCountDown = time.time()
 
-			cv2.imshow(windowName,resize)
+			#qarray = QtGui.QImage(resize.data, self.monitorx,self.monitory, QtGui.QImage.Format.Format_BGR888)
+			#pixmap = QtGui.QPixmap.fromImage(qarray)
+			#self.output.emit(pixmap)
+
+			self.output.emit(resize)
+
+			#cv2.imshow(windowName,resize)
 			
 			frameCount += 1
 			if frameCount == 100: #checking the fps every 100 frames
@@ -194,11 +192,11 @@ class Worker(QtCore.QObject):
 			"""
 			Break if esc key is pressed
 			"""
-
+			'''
 			key = cv2.waitKey(1)
 			if key == 27:
 				break
-		
+			'''
 		cv2.destroyAllWindows()
 		video.release()
 		#del video
@@ -214,3 +212,33 @@ class Worker(QtCore.QObject):
 		self.running = False
 		print('stopping process')
 		#self.terminate()
+
+
+class NewWindow(QtWidgets.QWidget):
+	def __init__(self):
+		super().__init__()
+		self.running = True
+		self.layout = QtWidgets.QVBoxLayout()
+		self.frame = QtWidgets.QLabel()
+		self.layout.addWidget(self.frame)
+		self.setLayout(self.layout)
+		
+
+class DummyWorker(QtCore.QObject):
+	output = QtCore.pyqtSignal(QtGui.QPixmap)
+	def __init__(self):
+		super().__init__()
+		self.running = True
+	def run(self):
+		timeout = time.time() + 10
+		while time.time() < timeout and self.running:
+			array = np.random.randint(0,255,(200,200), dtype=np.uint8)
+			qarray = QtGui.QImage(array.data, array.shape[1], array.shape[0], QtGui.QImage.Format.Format_Grayscale8)
+			pixmap = QtGui.QPixmap.fromImage(qarray)
+			#self.frame.setPixmap(pixmap)
+			self.output.emit(pixmap)
+			#cv2.imshow('window',array)
+			#cv2.waitKey(1)
+		#cv2.destroyAllWindows()
+	def stop(self):
+		self.running = False
