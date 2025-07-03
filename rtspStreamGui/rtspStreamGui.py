@@ -6,10 +6,6 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 from .rtspWorker import Worker, aspectAdjust
 
-import ctypes
-import numpy as np
-
-#from ffpyplayer.player import MediaPlayer
 
 from pathlib import Path
 import os, sys
@@ -72,6 +68,7 @@ class Ui_MainWindow(object):
 		self.centralwidget = QtWidgets.QWidget(MainWindow)
 		self.centralwidget.setObjectName("centralwidget")
 
+		self.gridlayout = QtWidgets.QGridLayout()
 
 		font = QtGui.QFont()
 		font.setPointSize(basefont)
@@ -86,6 +83,7 @@ class Ui_MainWindow(object):
 		self.rtspAddressBox.setGeometry(QtCore.QRect(box1x, int(0*boxOffset + box1pos[1]),*lineBoxDimensions))
 		self.rtspAddressBox.setObjectName("rtspAddressBox")
 		self.rtspAddressBox.setFont(boxfont)
+		self.gridlayout.addWidget()
 
 		self.rtspAdressLabel = QtWidgets.QLabel(self.centralwidget)
 		self.rtspAdressLabel.setGeometry(QtCore.QRect(box1x, int(-0.5*boxOffset + box1pos[1]), 111, 16))
@@ -409,10 +407,6 @@ class Ui_MainWindow(object):
 		self.openDirectoryButton.clicked.connect(self.folderDialogue)
 		self.rtspAddressesBox.currentTextChanged.connect(self.changeAddress)
 		self.removeAddressButton.clicked.connect(self.removeAddress)
-
-
-		self.threadpool = QtCore.QThreadPool()
-
 			
 
 
