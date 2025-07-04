@@ -103,14 +103,10 @@ class Worker(QtCore.QObject):
 		fpsCheckCount = 0
 		totalFPS = 0
 		while self.running:
-			# Used to display FPS on stream
 			curr_frame_time = time.time()
-
-			#array = np.random.randint(0,255,size=(500,800,3),dtype = np.uint8)
 
 			ret = video.grab()
 
-			#ret, array = video.read()
 			skipCount +=1
 			if skipCount > 9:
 				skipCount = 0
@@ -118,15 +114,9 @@ class Worker(QtCore.QObject):
 			if skipCount < self.frameSkip: #skipping some frames to allow catch up
 				continue 
 			
-			#skipCount = 0
 			ret, array = video.retrieve()
 
-			#frame, val = player.get_frame()
-			"""
-			Create a reshaped NumPy array to display using OpenCV
-			"""
-			#npndarray = np.ndarray(buffer=array, dtype=np.uint8, shape=(item.height, item.width, num_channels)) # buffer_bytes_per_pixel))
-			#npndarray = np.where(cross == True, crossElement, npndarray)
+
 
 			if self.crossCheck:
 				array[self.crossOffsetH + int(self.height/2-(crossThickness-1)/2+1): self.crossOffsetH + int(self.height/2+(crossThickness-1)/2),
@@ -148,11 +138,10 @@ class Worker(QtCore.QObject):
 				self.crossOffsetW+ int(self.width/2-self.crosssize/2 + 1):self.crossOffsetW+int(self.width/2+self.crosssize/2)] = crossElement #upper horizontal
 			if self.lineCheck:
 				array[self.linePosition:self.linePosition+lineThickness,self.crossOffsetW+ int(self.width/2-lineSize/2 + 1):self.crossOffsetW+ int(self.width/2+lineSize/2)] = crossElement
-			#fps = str(1/(curr_frame_time - prev_frame_time))
+
 			resize = cv2.resize(array,(self.monitorx,self.monitory))
 			if self.useGain:
 				resize = applyGain(resize,self.gain)
-			#cv2.putText(resize, fps,textpos, cv2.FONT_HERSHEY_SIMPLEX, textsize, (100, 255, 0), 3, cv2.LINE_AA)
 			if self.snapshot:
 				dt = datetime.fromtimestamp(time.time())
 				filename = f'{self.imageDir}/{dt.day:02d}_{dt.month:02d}_{dt.year}_{dt.hour:02d}{dt.minute:02d}{dt.second:02d}.png'
@@ -166,13 +155,14 @@ class Worker(QtCore.QObject):
 					cv2.imwrite(filename, resize)
 					self.imageCountDown = time.time()
 
-			#qarray = QtGui.QImage(resize.data, self.monitorx,self.monitory, QtGui.QImage.Format.Format_BGR888)
-			#pixmap = QtGui.QPixmap.fromImage(qarray)
-			#self.output.emit(pixmap)
-
+			'''
+			totalbytes = resize.nbytes
+			bpl = int(totalbytes/resize.shape[0])
+			qarray = QtGui.QImage(resize.data, resize.shape[1],resize.shape[0], bpl, QtGui.QImage.Format.Format_BGR888)
+			pixmap = QtGui.QPixmap.fromImage(qarray)
+			self.output.emit(pixmap)
+			'''
 			self.output.emit(resize)
-
-			#cv2.imshow(windowName,resize)
 			
 			frameCount += 1
 			if frameCount == 100: #checking the fps every 100 frames
@@ -188,15 +178,15 @@ class Worker(QtCore.QObject):
 				fpsCheckCount += 1
 			prev_frame_time = curr_frame_time
 
-
+			time.sleep(0.01)
 			"""
 			Break if esc key is pressed
 			"""
-			'''
+			
 			key = cv2.waitKey(1)
 			if key == 27:
 				break
-			'''
+			
 		cv2.destroyAllWindows()
 		video.release()
 		#del video

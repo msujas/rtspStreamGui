@@ -500,18 +500,17 @@ class Ui_MainWindow(object):
 		cv2.namedWindow(self.windowName)
 		#cv2.moveWindow(self.windowName,self.screenwidth-monitorx - 20,self.screenheight - monitory-100)
 
-		#self.newWindow = NewWindow()
-		#self.newWindow.setWindowTitle(rtspAdress)
-		
-		#self.newWindow.show()
-		#self.worker= DummyWorker()
+		'''
+		self.newWindow = NewWindow()
+		self.newWindow.setWindowTitle(rtspAdress)
+		self.newWindow.show()
+		'''
 		
 		self.thread = QtCore.QThread()
 		self.worker.moveToThread(self.thread)
 		self.thread.started.connect(self.worker.run)
 		self.worker.output.connect(self.windowUpdate)
-		#self.worker.finished.connect(self.thread.quit)
-		#self.worker.finished.connect(self.worker.deleteLater)
+
 		self.thread.start()
 		self.runButton.setEnabled(False)
 	
