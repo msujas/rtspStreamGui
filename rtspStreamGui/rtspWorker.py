@@ -181,11 +181,11 @@ class Worker(QtCore.QObject):
 			"""
 			Break if esc key is pressed
 			"""
-			
+			'''
 			key = cv2.waitKey(1)
 			if key == 27:
 				break
-			
+			'''
 		cv2.destroyAllWindows()
 		video.release()
 		#del video
