@@ -1,14 +1,14 @@
 [build-system]
-requires = ["setuptools >= 59.0"]
+requires = ["setuptools >= 60.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "rtspStreamGui"
 version = "1.0"
-requires-python = ">= 3.8"
+requires-python = ">= 3.9"
 dependencies = ["opencv-python",
                 "numpy",
-                "PyQt5"]
+                "PyQt6"]
 authors = [{name = "Kenneth P. Marshall", email = "kenneth.marshall@esrf.fr"}]
 maintainers = [{name = "Kenneth P. Marshall", email = "kenneth.marshall@esrf.fr"}]
 description = "A GUI for running a rtsp stream camera"

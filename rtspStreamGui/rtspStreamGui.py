@@ -6,7 +6,7 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 from .rtspWorker import Worker, aspectAdjust,NewWindow,  DummyWorker
 import cv2
-
+import time
 from pathlib import Path
 import os, sys
 
@@ -451,8 +451,6 @@ class Ui_MainWindow(object):
 		self.rtspAddressesBox.currentTextChanged.connect(self.changeAddress)
 		self.removeAddressButton.clicked.connect(self.removeAddress)
 			
-
-
 	def retranslateUi(self, MainWindow):
 		_translate = QtCore.QCoreApplication.translate
 		MainWindow.setWindowTitle(_translate("MainWindow", "rtsp GUI"))
@@ -515,7 +513,6 @@ class Ui_MainWindow(object):
 		self.runButton.setEnabled(False)
 	
 	def windowUpdate(self, image):
-		
 		if self.running:
 			cv2.imshow(self.windowName,image)
 			#self.newWindow.frame.setPixmap(image)

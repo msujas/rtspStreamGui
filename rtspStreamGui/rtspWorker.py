@@ -53,15 +53,13 @@ class Worker(QtCore.QObject):
 		tries = 0
 		tries_max = 200
 		sleep_time_secs = 5
-		#self.gstAdress =  f"rtspsrc location={self.address} ! rtph265depay ! h265parse ! videoconvert ! appsink"
+
 		video = cv2.VideoCapture(self.address)
 		ret, array = video.read()
-		#player = MediaPlayer(self.address)
 		
 		if ret == False:
 			print('stream not found')
 			return
-
 
 		pixelFormats =	{'Mono8':1, 'Mono10':1, 'Mono10p':1, 'Mono10Packed':1, 'Mono12':1, 'Mono12p':1,
 		'Mono12Packed':1, 'Mono16':1, 'BayerRG8':1, 'BayerRG10':1, 'BayerRG10p':1, 'BayerRG10Packed':1,
@@ -76,7 +74,6 @@ class Worker(QtCore.QObject):
 		lineSize = 300
 		lineThickness = 3
 
-
 		self.monitorx,self.monitory = aspectAdjust(self.monitorx,self.monitory,self.aspect)
 
 		curr_frame_time = 0
@@ -85,10 +82,7 @@ class Worker(QtCore.QObject):
 		cycletimes = np.array([])
 
 		print(f'monitorx {self.monitorx}, monitory {self.monitory}')
-		#windowName = f'{self.address} (press stop to close)'
-		#cv2.namedWindow(windowName)
-		#cv2.moveWindow(windowName,self.screenwidth-self.monitorx - 20,self.screenheight - self.monitory-100)
-		
+
 		num_channels= 3#array.shape[2]
 		if num_channels == 3:
 			crossElement = np.array([0,0,255], dtype = np.uint8)
@@ -103,7 +97,6 @@ class Worker(QtCore.QObject):
 		fpsCheckCount = 0
 		totalFPS = 0
 		while self.running:
-			curr_frame_time = time.time()
 
 			ret = video.grab()
 
@@ -115,8 +108,6 @@ class Worker(QtCore.QObject):
 				continue 
 			
 			ret, array = video.retrieve()
-
-
 
 			if self.crossCheck:
 				array[self.crossOffsetH + int(self.height/2-(crossThickness-1)/2+1): self.crossOffsetH + int(self.height/2+(crossThickness-1)/2),
@@ -176,31 +167,13 @@ class Worker(QtCore.QObject):
 				else:
 					totalFPS = (totalFPS*fpsCheckCount + fps)/(fpsCheckCount+1)
 				fpsCheckCount += 1
-			prev_frame_time = curr_frame_time
 
-			"""
-			Break if esc key is pressed
-			"""
-			'''
-			key = cv2.waitKey(1)
-			if key == 27:
-				break
-			'''
-		cv2.destroyAllWindows()
 		video.release()
-		#del video
-		#system.destroy_device()
-		#print(1/np.average(buffertimes))
-		#cycletimes = cycletimes[1:]
-		#print(f'fps = {1/np.average(cycletimes)}, standard deviation = {np.std(1/cycletimes)}')
 		print(f'fps: {totalFPS}')
-		#self.terminate()
-		return
 
 	def stop(self):
 		self.running = False
 		print('stopping process')
-		#self.terminate()
 
 
 class NewWindow(QtWidgets.QWidget):
@@ -222,12 +195,11 @@ class DummyWorker(QtCore.QObject):
 		timeout = time.time() + 10
 		while time.time() < timeout and self.running:
 			array = np.random.randint(0,255,(200,200), dtype=np.uint8)
-			qarray = QtGui.QImage(array.data, array.shape[1], array.shape[0], QtGui.QImage.Format.Format_Grayscale8)
+			totalbytes = array.nbytes
+			bpl = int(totalbytes/array.shape[0])
+			qarray = QtGui.QImage(array.data, array.shape[1], array.shape[0], bpl, QtGui.QImage.Format.Format_Grayscale8)
 			pixmap = QtGui.QPixmap.fromImage(qarray)
-			#self.frame.setPixmap(pixmap)
 			self.output.emit(pixmap)
-			#cv2.imshow('window',array)
-			#cv2.waitKey(1)
-		#cv2.destroyAllWindows()
+
 	def stop(self):
 		self.running = False
