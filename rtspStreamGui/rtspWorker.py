@@ -178,7 +178,6 @@ class Worker(QtCore.QObject):
 				fpsCheckCount += 1
 			prev_frame_time = curr_frame_time
 
-			time.sleep(0.01)
 			"""
 			Break if esc key is pressed
 			"""
