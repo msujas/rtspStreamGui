@@ -2,3 +2,4 @@ __pycache__
 rtspStreamGui.egg-info
 dist
 image.png
+cvtest.py

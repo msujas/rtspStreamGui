@@ -12,16 +12,17 @@ def applyGain(array,gain):
 	newarray = np.where(newarray > 255, 255, newarray).astype(np.uint8)
 	return newarray
 
-def aspectAdjust(monx,mony,apsect):
-	if monx/mony <apsect: #adjusting the monitor x or y values based on the aspect ratio
-		mony = int(monx/apsect)
-	elif monx/mony > apsect:
-		monx = int(mony*apsect)
+def aspectAdjust(monx,mony,imageapsect):
+	if monx/mony <imageapsect: #adjusting the monitor x or y values based on the aspect ratio
+		mony = int(monx/imageapsect)
+	elif monx/mony > imageapsect:
+		monx = int(mony*imageapsect)
 	return monx, mony
 
 class Worker(QtCore.QObject):
 	#output = QtCore.pyqtSignal(QtGui.QPixmap)
 	output = QtCore.pyqtSignal(np.ndarray)
+	streamNotFound = QtCore.pyqtSignal()
 	def __init__(self,address:str, monitorx: int, monitory: int, gain: float,  screenwidth: int, frameSkip:int,
 			  screenheight: int, crosssize: int, crossOffsetH: int, crossOffsetW: int, crossCheck: bool, linePosition: int, 
 	imageTime: int, imageDir: str, record: bool = False, recordTime: int = 1, lineCheck: bool = True, useGain:bool = True):
@@ -58,7 +59,9 @@ class Worker(QtCore.QObject):
 		ret, array = video.read()
 		
 		if ret == False:
+			video.release()
 			print('stream not found')
+			self.streamNotFound.emit()
 			return
 
 		pixelFormats =	{'Mono8':1, 'Mono10':1, 'Mono10p':1, 'Mono10Packed':1, 'Mono12':1, 'Mono12p':1,
