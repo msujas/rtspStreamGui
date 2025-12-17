@@ -104,8 +104,7 @@ class Worker(QtCore.QObject):
 			ret = video.grab()
 
 			skipCount +=1
-			if skipCount > 9:
-				skipCount = 0
+			skipCount = skipCount%10 #resets skipCount to 0 when it reaches 10
 			
 			if skipCount < self.frameSkip: #skipping some frames to allow catch up
 				continue 

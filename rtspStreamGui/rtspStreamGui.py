@@ -31,9 +31,9 @@ class parAttributes():
 			return self.param.text()
 
 
-class Ui_MainWindow(object):
-	def setupUi(self, MainWindow):
-		MainWindow.setObjectName("rtsp GUI")
+class Ui_MainWindow(QtWidgets.QMainWindow):
+	def setupUi(self):
+		super().setObjectName("rtsp GUI")
 
 		self.screen = QtWidgets.QApplication.primaryScreen().size()
 		self.screenwidth = self.screen.width()
@@ -48,8 +48,11 @@ class Ui_MainWindow(object):
 			monydefault = 900
 		scaling = (self.screenwidth/1920)**0.5 #scaling box and font sizes for different screen resolutions
 		windowsize = [int(350*scaling),int(700*scaling)]
-		MainWindow.resize(*windowsize)
-		MainWindow.move(0,self.screenheight - windowsize[1] - 75)
+		super().resize(*windowsize)
+		super().move(0,self.screenheight - windowsize[1] - 75)
+		iconfile = f'{os.path.dirname(os.path.realpath(__file__))}/image/icon.ico'
+		icon = QtGui.QIcon(iconfile)
+		super().setWindowIcon(icon)
 		box1pos = [int(20*scaling), int(35*scaling)]
 		boxDimensions = [int(80*scaling),int(22*scaling)]
 		lineBoxDimensions = [int(200*scaling),int(22*scaling)]
@@ -65,7 +68,7 @@ class Ui_MainWindow(object):
 		
 		basefont = int(12*scaling)
 
-		self.centralwidget = QtWidgets.QWidget(MainWindow)
+		self.centralwidget = QtWidgets.QWidget()
 		self.centralwidget.setObjectName("centralwidget")
 
 		self.gridlayout = QtWidgets.QGridLayout()
@@ -354,21 +357,19 @@ class Ui_MainWindow(object):
 
 		self.centralwidget.setLayout(self.gridlayout)
 
-		MainWindow.setCentralWidget(self.centralwidget)
-		MainWindow.setCentralWidget(self.centralwidget)
-		self.menubar = QtWidgets.QMenuBar(MainWindow)
+		super().setCentralWidget(self.centralwidget)
+		super().setCentralWidget(self.centralwidget)
+		self.menubar = QtWidgets.QMenuBar()
 		self.menubar.setGeometry(QtCore.QRect(0, 0, 234, 21))
 		self.menubar.setObjectName("menubar")
-		MainWindow.setMenuBar(self.menubar)
-		self.statusbar = QtWidgets.QStatusBar(MainWindow)
+		super().setMenuBar(self.menubar)
+		self.statusbar = QtWidgets.QStatusBar()
 		self.statusbar.setObjectName("statusbar")
-		MainWindow.setStatusBar(self.statusbar)
-
-
+		super().setStatusBar(self.statusbar)
 
 		self.gainBox.setValue(20)
-		self.retranslateUi(MainWindow)
-		QtCore.QMetaObject.connectSlotsByName(MainWindow)
+		self.retranslateUi()
+		QtCore.QMetaObject.connectSlotsByName(self)
 
 		self.running = False
 
@@ -414,9 +415,9 @@ class Ui_MainWindow(object):
 		self.rtspAddressesBox.currentTextChanged.connect(self.changeAddress)
 		self.removeAddressButton.clicked.connect(self.removeAddress)
 			
-	def retranslateUi(self, MainWindow):
+	def retranslateUi(self):
 		_translate = QtCore.QCoreApplication.translate
-		MainWindow.setWindowTitle(_translate("MainWindow", "rtsp GUI"))
+		super().setWindowTitle(_translate("MainWindow", "rtsp GUI"))
 		self.runButton.setText(_translate("MainWindow", "Let\'s gooooo!"))
 
 		self.monitorxLabel.setText(_translate("MainWindow", "x image size on screen"))
@@ -668,10 +669,10 @@ class Ui_MainWindow(object):
 
 def main():
 	app = QtWidgets.QApplication(sys.argv)
-	MainWindow = QtWidgets.QMainWindow()
+	#MainWindow = QtWidgets.QMainWindow()
 	ui = Ui_MainWindow()
-	ui.setupUi(MainWindow)
-	MainWindow.show()
+	ui.setupUi()
+	ui.show()
 	sys.exit(app.exec())
 if __name__ == "__main__":
 	main()
