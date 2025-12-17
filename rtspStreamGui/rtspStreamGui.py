@@ -493,10 +493,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.snapShotButton.setEnabled(False)
 		self.imageSeriesButton.setEnabled(False)
 		self.imageSeriesStopButton.setEnabled(False)
+		self.thread.wait()
 		self.running = False
-
-		#self.newWindow.close()
-		
 
 	def updateParamDct(self):
 		self.paramDct = {self.rtspAddressBox.objectName(): [self.rtspAddressBox,self.rtspAddressBox.text()],
@@ -625,8 +623,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 			self.crossOffsetHBox.setEnabled(True)
 			self.crossOffsetWBox.setEnabled(True)
 
-
-
 	def folderDialogue(self):
 		folder = str(QtWidgets.QFileDialog.getExistingDirectory(None, "Select Directory",self.directoryBox.text()))
 		if folder != '':
@@ -666,6 +662,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 			elif type(self.paramDct[parname][0]) == QtWidgets.QCheckBox:
 				self.paramDct[parname][0].setChecked(stringToBool(parvalue))
 		self.updateParamDct()
+	def closeEvent(self, a0):
+		if self.running:
+			self.stop_worker()
+		return super().closeEvent(a0)
 
 def main():
 	app = QtWidgets.QApplication(sys.argv)
