@@ -355,17 +355,50 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.lineCheckBox.stateChanged.connect(self.updateConfigLog)
 		self.gridlayout.addWidget(self.lineCheckBox,21,1)
 
+		self.lineanglegrid = QtWidgets.QGridLayout()
+
 		self.lineanglebox = QtWidgets.QDoubleSpinBox()
 		self.lineanglebox.setObjectName("lineanglebox")
 		self.lineanglebox.setValue(0)
 		self.lineanglebox.setDecimals(1)
 		self.lineanglebox.setSingleStep(0.1)
+		self.lineanglebox.setMinimum(-89.9)
+		self.lineanglebox.setMaximum(90)
 		self.lineanglebox.setKeyboardTracking(False)
-		self.gridlayout.addWidget(self.lineanglebox, 22,0)
+		self.lineanglegrid.addWidget(self.lineanglebox, 1,0)
 
 		self.lineanglelabel= QtWidgets.QLabel()
 		self.lineanglelabel.setText('line angle')
-		self.gridlayout.addWidget(self.lineanglelabel, 22,1)
+		self.lineanglegrid.addWidget(self.lineanglelabel, 0,0)
+
+		self.linethicknessbox = QtWidgets.QSpinBox()
+		self.linethicknessbox.setObjectName('linethicknessbox')
+		self.linethicknessbox.setValue(3)
+		self.linethicknessbox.setMinimum(1)
+		self.linethicknessbox.setKeyboardTracking(False)
+		self.lineanglegrid.addWidget(self.linethicknessbox,1,1)
+		self.linethicknessbox.valueChanged.connect(self.linethicknesschange)
+		
+		self.linethicknesslabel = QtWidgets.QLabel()
+		self.linethicknesslabel.setText('line thickness')
+		self.linethicknesslabel.setObjectName('linethicknesslabel')
+		self.lineanglegrid.addWidget(self.linethicknesslabel,0,1)
+
+		self.linelengthbox = QtWidgets.QSpinBox()
+		self.linelengthbox.setObjectName('linelengthbox')
+		self.linelengthbox.setMaximum(1000)
+		self.linelengthbox.setMinimum(1)
+		self.linelengthbox.setValue(300)
+		self.linelengthbox.setKeyboardTracking(False)
+		self.linelengthbox.valueChanged.connect(self.linelengthchange)
+		self.lineanglegrid.addWidget(self.linelengthbox,1,2)
+
+		self.linelengthlabel = QtWidgets.QLabel()
+		self.linelengthlabel.setObjectName('linelengthlabel')
+		self.linelengthlabel.setText('line length')
+		self.lineanglegrid.addWidget(self.linelengthlabel,0,2)
+
+		self.gridlayout.addLayout(self.lineanglegrid,22,0,1,2)
 
 
 		self.centralwidget.setLayout(self.gridlayout)
@@ -471,7 +504,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		gain = gain, screenwidth = self.screenwidth, screenheight=self.screenheight, frameSkip = frameSkip,
 		crosssize = crosssize,crossOffsetH = crossOffsetH, crossOffsetW = crossOffsetW, crossCheck = crossCheck, imageTime = imageTime, 
 		imageDir = self.snapshotDir,lineCheck=self.lineCheckBox.isChecked(), linePosition=self.linePositionBox.value(), useGain = useGain,
-		lineangle=self.lineanglebox.value())
+		lineangle=self.lineanglebox.value(), linethickness=self.linethicknessbox.value(), linelength=self.linelengthbox.value())
 
 		self.windowName = f'{rtspAdress} (press stop to close)'
 		cv2.namedWindow(self.windowName)
@@ -589,6 +622,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 	def lineanglechange(self):
 		if self.running:
 			self.worker.lineangle = self.lineanglebox.value()
+
+	def linethicknesschange(self):
+		if self.running:
+			self.worker.linethickness = self.linethicknessbox.value()
+	
+	def linelengthchange(self):
+		if self.running:
+			self.worker.linelength = self.linelengthbox.value()
+
 	def lineCheckChange(self):
 		if self.running:
 			self.worker.lineCheck = self.lineCheckBox.isChecked()

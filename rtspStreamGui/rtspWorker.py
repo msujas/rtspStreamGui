@@ -27,7 +27,7 @@ class Worker(QtCore.QObject):
 	def __init__(self,address:str, monitorx: int, monitory: int, gain: float,  screenwidth: int, frameSkip:int,
 			  screenheight: int, crosssize: int, crossOffsetH: int, crossOffsetW: int, crossCheck: bool, linePosition: int, 
 	imageTime: int, imageDir: str, record: bool = False, recordTime: int = 1, lineCheck: bool = True, useGain:bool = True,
-	lineangle:float = 0):
+	lineangle:float = 0, linethickness:int = 3, linelength:int = 300):
 		super(Worker,self).__init__()
 		self.address = address
 		self.monitorx = monitorx
@@ -51,6 +51,8 @@ class Worker(QtCore.QObject):
 		self.lineCheck = lineCheck
 		self.useGain = useGain
 		self.lineangle = lineangle
+		self.linethickness = linethickness
+		self.linelength = linelength
 
 	def run(self):
 		import cv2
@@ -77,8 +79,6 @@ class Worker(QtCore.QObject):
 		self.aspect = self.width/self.height
 		print(self.height,self.width)
 		crossThickness = 4
-		lineSize = 300
-		lineThickness = 3
 
 		self.monitorx,self.monitory = aspectAdjust(self.monitorx,self.monitory,self.aspect)
 
@@ -91,9 +91,9 @@ class Worker(QtCore.QObject):
 
 		num_channels= 3#array.shape[2]
 		if num_channels == 3:
-			crossElement = np.array([0,0,255], dtype = np.uint8)
+			self.crossElement = np.array([0,0,255], dtype = np.uint8)
 		elif num_channels == 1:
-			crossElement = np.array([255],dtype = np.uint8)
+			self.crossElement = np.array([255],dtype = np.uint8)
 
 		self.imageCountDown = 0
 
@@ -118,25 +118,26 @@ class Worker(QtCore.QObject):
 
 			if self.crossCheck:
 				array[self.crossOffsetH + int(self.height/2-(crossThickness-1)/2+1): self.crossOffsetH + int(self.height/2+(crossThickness-1)/2),
-				self.crossOffsetW+ int(self.width/2-self.crosssize/2 + 1):self.crossOffsetW+ int(self.width/2+self.crosssize/2)] = crossElement #middle horizontal
+				self.crossOffsetW+ int(self.width/2-self.crosssize/2 + 1):self.crossOffsetW+ int(self.width/2+self.crosssize/2)] = self.crossElement #middle horizontal
 
 				array[self.crossOffsetH + int(self.height/2-self.crosssize/2 + 1):self.crossOffsetH + int(self.height/2+self.crosssize/2),
-				self.crossOffsetW+ int(self.width/2 - crossThickness/2 +1): self.crossOffsetW+int(self.width/2 + crossThickness/2)] = crossElement #middle vertical
+				self.crossOffsetW+ int(self.width/2 - crossThickness/2 +1): self.crossOffsetW+int(self.width/2 + crossThickness/2)] = self.crossElement #middle vertical
 
 				array[self.crossOffsetH + int(self.height/2-self.crosssize/2 + 1):self.crossOffsetH + int(self.height/2+self.crosssize/2),
-				self.crossOffsetW+ int(self.width/2-self.crosssize/2 + 1):self.crossOffsetW+int(self.width/2-self.crosssize/2 + 1 + crossThickness)] = crossElement #left vertical
+				self.crossOffsetW+ int(self.width/2-self.crosssize/2 + 1):self.crossOffsetW+int(self.width/2-self.crosssize/2 + 1 + crossThickness)] = self.crossElement #left vertical
 
 				array[self.crossOffsetH + int(self.height/2-self.crosssize/2 + 1):self.crossOffsetH + int(self.height/2+self.crosssize/2),
-				self.crossOffsetW+ int(self.width/2+self.crosssize/2-crossThickness):  self.crossOffsetW+int(self.width/2+self.crosssize/2)] = crossElement #right vertical
+				self.crossOffsetW+ int(self.width/2+self.crosssize/2-crossThickness):  self.crossOffsetW+int(self.width/2+self.crosssize/2)] = self.crossElement #right vertical
 
 				array[self.crossOffsetH + int(self.height/2-self.crosssize/2 + 1):self.crossOffsetH + int(self.height/2-self.crosssize/2 + crossThickness+1),
-				self.crossOffsetW+ int(self.width/2-self.crosssize/2 + 1):self.crossOffsetW+int(self.width/2+self.crosssize/2)] = crossElement #lower horizontal
+				self.crossOffsetW+ int(self.width/2-self.crosssize/2 + 1):self.crossOffsetW+int(self.width/2+self.crosssize/2)] = self.crossElement #lower horizontal
 
 				array[self.crossOffsetH + int(self.height/2+self.crosssize/2-crossThickness):  self.crossOffsetH + int(self.height/2+self.crosssize/2),
-				self.crossOffsetW+ int(self.width/2-self.crosssize/2 + 1):self.crossOffsetW+int(self.width/2+self.crosssize/2)] = crossElement #upper horizontal
+				self.crossOffsetW+ int(self.width/2-self.crosssize/2 + 1):self.crossOffsetW+int(self.width/2+self.crosssize/2)] = self.crossElement #upper horizontal
 			if self.lineCheck:
-				#array[self.linePosition:self.linePosition+lineThickness,self.crossOffsetW+ int(self.width/2-lineSize/2 + 1):self.crossOffsetW+ int(self.width/2+lineSize/2)] = crossElement
-				array = self.drawline(array,self.linePosition, self.xoffset,lineSize, self.lineangle)
+				self.yoffset = int(self.crossOffsetH +self.height/2)
+				self.xoffset = int(self.crossOffsetW + self.width/2)
+				array = self.drawline(array,self.linePosition, self.xoffset,self.linelength, self.lineangle, self.linethickness)
 			resize = cv2.resize(array,(self.monitorx,self.monitory))
 			if self.useGain:
 				resize = applyGain(resize,self.gain)
@@ -153,13 +154,7 @@ class Worker(QtCore.QObject):
 					cv2.imwrite(filename, resize)
 					self.imageCountDown = time.time()
 
-			'''
-			totalbytes = resize.nbytes
-			bpl = int(totalbytes/resize.shape[0])
-			qarray = QtGui.QImage(resize.data, resize.shape[1],resize.shape[0], bpl, QtGui.QImage.Format.Format_BGR888)
-			pixmap = QtGui.QPixmap.fromImage(qarray)
-			self.output.emit(pixmap)
-			'''
+
 			self.output.emit(resize)
 			
 			frameCount += 1
@@ -183,20 +178,41 @@ class Worker(QtCore.QObject):
 		print('stopping process')
 
 	def drawline(self,array:np.ndarray, ycenter:int, xcenter:int, size:int, angle:float =0, thickness=3):
+
 		angler = angle * math.pi / 180
-		crossElement = np.array([0,0,255], dtype = np.uint8) #red
-		linestartx = int(xcenter - size/2)
-		lineendx = int(xcenter + size/2)
+		c = -xcenter*math.tan(angler) + ycenter
+		m = np.tan(angler)
+
+		if abs(angle) > 45:
+			sign = int((angle > 0)*2-1)
+			linestarty = int(ycenter -(size/2)*math.sin(angler))
+			lineendy = int(ycenter + (size/2)*math.sin(angler))
+			y2 = np.arange(linestarty, lineendy+1, sign,dtype = np.int16)
+			x2 = np.astype((y2 - c)/m, np.int16)
+			
+			for n in range(thickness):
+				i = int(n-(thickness-1)/2)
+				array[y2,x2+i] = self.crossElement
+			return array
+		
+		linestartx = int(xcenter - (size/2)*math.cos(angler))
+		lineendx = int(xcenter + (size/2)*math.cos(angler))
+
 		x = np.arange(linestartx, lineendx+1, dtype = np.int16)
-		y = -xcenter*math.tan(angler) + np.tan(angler)*x + ycenter
+		y = m*x + c
 		y = y.astype(np.int16)
 		for n in range(thickness):
 			i = int(n-(thickness-1)/2)
-			array[y+i,x] = crossElement
-		
+			array[y+i,x] = self.crossElement
 		return array
-
-
+	
+	def emitQmap(self,resize):			
+		totalbytes = resize.nbytes
+		bpl = int(totalbytes/resize.shape[0])
+		qarray = QtGui.QImage(resize.data, resize.shape[1],resize.shape[0], bpl, QtGui.QImage.Format.Format_BGR888)
+		pixmap = QtGui.QPixmap.fromImage(qarray)
+		self.output.emit(pixmap)
+			
 
 class NewWindow(QtWidgets.QWidget):
 	def __init__(self):
