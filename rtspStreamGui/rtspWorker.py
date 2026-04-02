@@ -3,6 +3,7 @@ from PyQt6 import QtCore, QtWidgets, QtGui
 import numpy as np
 import time
 from datetime import datetime
+import math
 
 def applyGain(array,gain):
 	gainExtent=40
@@ -25,7 +26,8 @@ class Worker(QtCore.QObject):
 	streamNotFound = QtCore.pyqtSignal()
 	def __init__(self,address:str, monitorx: int, monitory: int, gain: float,  screenwidth: int, frameSkip:int,
 			  screenheight: int, crosssize: int, crossOffsetH: int, crossOffsetW: int, crossCheck: bool, linePosition: int, 
-	imageTime: int, imageDir: str, record: bool = False, recordTime: int = 1, lineCheck: bool = True, useGain:bool = True):
+	imageTime: int, imageDir: str, record: bool = False, recordTime: int = 1, lineCheck: bool = True, useGain:bool = True,
+	lineangle:float = 0):
 		super(Worker,self).__init__()
 		self.address = address
 		self.monitorx = monitorx
@@ -48,6 +50,7 @@ class Worker(QtCore.QObject):
 		self.linePosition = linePosition
 		self.lineCheck = lineCheck
 		self.useGain = useGain
+		self.lineangle = lineangle
 
 	def run(self):
 		import cv2
@@ -99,6 +102,8 @@ class Worker(QtCore.QObject):
 		t0 = time.time()
 		fpsCheckCount = 0
 		totalFPS = 0
+		self.yoffset = int(self.crossOffsetH +self.height/2)
+		self.xoffset = int(self.crossOffsetW + self.width/2)
 		while self.running:
 
 			ret = video.grab()
@@ -130,8 +135,8 @@ class Worker(QtCore.QObject):
 				array[self.crossOffsetH + int(self.height/2+self.crosssize/2-crossThickness):  self.crossOffsetH + int(self.height/2+self.crosssize/2),
 				self.crossOffsetW+ int(self.width/2-self.crosssize/2 + 1):self.crossOffsetW+int(self.width/2+self.crosssize/2)] = crossElement #upper horizontal
 			if self.lineCheck:
-				array[self.linePosition:self.linePosition+lineThickness,self.crossOffsetW+ int(self.width/2-lineSize/2 + 1):self.crossOffsetW+ int(self.width/2+lineSize/2)] = crossElement
-
+				#array[self.linePosition:self.linePosition+lineThickness,self.crossOffsetW+ int(self.width/2-lineSize/2 + 1):self.crossOffsetW+ int(self.width/2+lineSize/2)] = crossElement
+				array = self.drawline(array,self.linePosition, self.xoffset,lineSize, self.lineangle)
 			resize = cv2.resize(array,(self.monitorx,self.monitory))
 			if self.useGain:
 				resize = applyGain(resize,self.gain)
@@ -176,6 +181,21 @@ class Worker(QtCore.QObject):
 	def stop(self):
 		self.running = False
 		print('stopping process')
+
+	def drawline(self,array:np.ndarray, ycenter:int, xcenter:int, size:int, angle:float =0, thickness=3):
+		angler = angle * math.pi / 180
+		crossElement = np.array([0,0,255], dtype = np.uint8) #red
+		linestartx = int(xcenter - size/2)
+		lineendx = int(xcenter + size/2)
+		x = np.arange(linestartx, lineendx+1, dtype = np.int16)
+		y = -xcenter*math.tan(angler) + np.tan(angler)*x + ycenter
+		y = y.astype(np.int16)
+		for n in range(thickness):
+			i = int(n-(thickness-1)/2)
+			array[y+i,x] = crossElement
+		
+		return array
+
 
 
 class NewWindow(QtWidgets.QWidget):

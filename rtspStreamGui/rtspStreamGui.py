@@ -355,6 +355,19 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.lineCheckBox.stateChanged.connect(self.updateConfigLog)
 		self.gridlayout.addWidget(self.lineCheckBox,21,1)
 
+		self.lineanglebox = QtWidgets.QDoubleSpinBox()
+		self.lineanglebox.setObjectName("lineanglebox")
+		self.lineanglebox.setValue(0)
+		self.lineanglebox.setDecimals(1)
+		self.lineanglebox.setSingleStep(0.1)
+		self.lineanglebox.setKeyboardTracking(False)
+		self.gridlayout.addWidget(self.lineanglebox, 22,0)
+
+		self.lineanglelabel= QtWidgets.QLabel()
+		self.lineanglelabel.setText('line angle')
+		self.gridlayout.addWidget(self.lineanglelabel, 22,1)
+
+
 		self.centralwidget.setLayout(self.gridlayout)
 
 		super().setCentralWidget(self.centralwidget)
@@ -414,6 +427,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.openDirectoryButton.clicked.connect(self.folderDialogue)
 		self.rtspAddressesBox.currentTextChanged.connect(self.changeAddress)
 		self.removeAddressButton.clicked.connect(self.removeAddress)
+		self.lineanglebox.valueChanged.connect(self.lineanglechange)
 			
 	def retranslateUi(self):
 		_translate = QtCore.QCoreApplication.translate
@@ -456,7 +470,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.worker = Worker(address= rtspAdress, monitorx = monitorx,monitory = monitory,
 		gain = gain, screenwidth = self.screenwidth, screenheight=self.screenheight, frameSkip = frameSkip,
 		crosssize = crosssize,crossOffsetH = crossOffsetH, crossOffsetW = crossOffsetW, crossCheck = crossCheck, imageTime = imageTime, 
-		imageDir = self.snapshotDir,lineCheck=self.lineCheckBox.isChecked(), linePosition=self.linePositionBox.value(), useGain = useGain)
+		imageDir = self.snapshotDir,lineCheck=self.lineCheckBox.isChecked(), linePosition=self.linePositionBox.value(), useGain = useGain,
+		lineangle=self.lineanglebox.value())
 
 		self.windowName = f'{rtspAdress} (press stop to close)'
 		cv2.namedWindow(self.windowName)
@@ -571,7 +586,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 	def linePositionChange(self):
 		if self.running:
 			self.worker.linePosition = self.linePositionBox.value()
-	
+	def lineanglechange(self):
+		if self.running:
+			self.worker.lineangle = self.lineanglebox.value()
 	def lineCheckChange(self):
 		if self.running:
 			self.worker.lineCheck = self.lineCheckBox.isChecked()
