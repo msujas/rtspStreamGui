@@ -52,7 +52,6 @@ class Worker(QtCore.QObject):
 		self.linexoffset= linexoffset
 
 	def run(self):
-		import cv2
 		tries = 0
 		tries_max = 200
 		sleep_time_secs = 5

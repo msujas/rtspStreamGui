@@ -2,11 +2,9 @@
 
 # Created by: PyQt5 UI code generator 5.9.2
 
-
 from PyQt6 import QtCore, QtGui, QtWidgets
-from .rtspWorker import Worker, aspectAdjust,NewWindow,  DummyWorker
+from .rtspWorker import Worker, aspectAdjust
 import cv2
-import time
 from pathlib import Path
 import os, sys
 
@@ -21,14 +19,12 @@ class parAttributes():
 	def __init__(self, param):
 		self.param = param
 	def name(self):
-		return self.objectName()
+		return self.param.objectName()
 	def parValue(self):
-		if type(self.param) == QtWidgets.QSpinBox or type(self.param) == QtWidgets.QDoubleSpinBox:
-			return self.param.value()
-		elif type(self.param) == QtWidgets.QComboBox:
-			return self.param.currentText()
-		elif type(self.param) == QtWidgets.QLineEdit:
-			return self.param.text()
+		match type(self.param):
+			case QtWidgets.QSpinBox | QtWidgets.QDoubleSpinBox: return self.param.value()
+			case QtWidgets.QComboBox: return self.param.currentText()
+			case QtWidgets.QLineEdit: return self.param.text()
 
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
@@ -38,12 +34,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.screen = QtWidgets.QApplication.primaryScreen().size()
 		self.screenwidth = self.screen.width()
 		self.screenheight = self.screen.height()
-		if self.screenheight > 2000:
-			monydefault = 2000
-		elif self.screenheight > 1400:
-			monydefault = 1300
-		else:
-			monydefault = 900
 		iconfile = f'{os.path.dirname(os.path.realpath(__file__))}/image/icon.ico'
 		icon = QtGui.QIcon(iconfile)
 		super().setWindowIcon(icon)
@@ -102,7 +92,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.monitorxBox = QtWidgets.QSpinBox() #select x size of image on screen (in pixels)
 		self.monitorxBox.setMinimum(100)
 		self.monitorxBox.setMaximum(3840)
-		self.monitorxBox.setProperty("value", 3000)
+		self.monitorxBox.setValue(1000)
 		self.monitorxBox.setObjectName("monitorxBox")
 		self.monitorxBox.setFont(boxfont)
 		self.gridlayout.addWidget(self.monitorxBox, 5,0)
@@ -472,6 +462,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
 	def start_worker(self):
 		self.updateConfigLog()
+		self.updateAddressLog()
 		self.running = True
 		self.stopButton.setEnabled(True)
 		self.snapShotButton.setEnabled(True)
