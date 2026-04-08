@@ -30,6 +30,7 @@ class parAttributes():
 class Ui_MainWindow(QtWidgets.QMainWindow):
 	def setupUi(self):
 		super().setObjectName("rtsp GUI")
+		super().setWindowTitle( "rtsp GUI")
 
 		self.screen = QtWidgets.QApplication.primaryScreen().size()
 		self.screenwidth = self.screen.width()
@@ -100,12 +101,16 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.monitorxLabel = QtWidgets.QLabel()
 		self.monitorxLabel.setObjectName("monitorxLabel")
 		self.monitorxLabel.setFont(labelfont)
+		self.monitorxLabel.setText("x image size on screen")
+		self.monitorxLabel.adjustSize()
 		self.gridlayout.addWidget(self.monitorxLabel, 4,0)
 
 
 		self.aspectInfoLabel = QtWidgets.QLabel()
 		self.aspectInfoLabel.setFont(smallLabelfont)
 		self.aspectInfoLabel.setObjectName("aspectInfoLabel")
+		self.aspectInfoLabel.setText("aspect ratio of image on screen will be scaled automatically")
+		self.aspectInfoLabel.adjustSize()
 		self.gridlayout.addWidget(self.aspectInfoLabel,6,0,1,2)
 
 		self.frameSkipBox = QtWidgets.QSpinBox() #select gain (if gainAuto is off)
@@ -143,6 +148,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.gainLabel = QtWidgets.QLabel()
 		self.gainLabel.setObjectName("gainLabel")
 		self.gainLabel.setFont(labelfont)
+		self.gainLabel.setText("Gain (set Gain\nAuto to \'Off\')")
+		self.gainLabel.adjustSize()
 		self.gridlayout.addWidget(self.gainLabel,9,1)
 
 		self.crossSizeLabel = QtWidgets.QLabel()
@@ -218,6 +225,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.runButton.setFont(font)
 		self.runButton.setObjectName("runButton")
 		self.runButton.setMinimumHeight(int(50*scaling))
+		self.runButton.setText("Let\'s gooooo!")
 		self.gridlayout.addWidget(self.runButton,14,0,1,2)
 
 		self.stopButton = QtWidgets.QPushButton()
@@ -225,6 +233,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.stopButton.setFont(font)
 		self.stopButton.adjustSize()
 		self.stopButton.setEnabled(False)
+		self.stopButton.setText("Stop")
 		self.gridlayout.addWidget(self.stopButton,14,2)
 
 		self.snapShotButton = QtWidgets.QPushButton()
@@ -399,7 +408,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		super().setStatusBar(self.statusbar)
 
 		self.gainBox.setValue(20)
-		self.retranslateUi()
 		QtCore.QMetaObject.connectSlotsByName(self)
 
 		self.running = False
@@ -445,21 +453,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.removeAddressButton.clicked.connect(self.removeAddress)
 		self.lineanglebox.valueChanged.connect(self.lineanglechange)
 			
-	def retranslateUi(self):
-		_translate = QtCore.QCoreApplication.translate
-		super().setWindowTitle(_translate("MainWindow", "rtsp GUI"))
-		self.runButton.setText(_translate("MainWindow", "Let\'s gooooo!"))
-
-		self.monitorxLabel.setText(_translate("MainWindow", "x image size on screen"))
-		self.monitorxLabel.adjustSize()
-		self.aspectInfoLabel.setText(_translate("MainWindow", "aspect ratio of image on screen will be "
-"scaled automatically"))
-		self.aspectInfoLabel.adjustSize()
-		self.gainLabel.setText(_translate("MainWindow", "Gain (set Gain\n"
-"Auto to \'Off\')"))
-		self.gainLabel.adjustSize()
-		self.stopButton.setText(_translate("MainWindow", "Stop"))
-
 	def start_worker(self):
 		self.updateConfigLog()
 		self.updateAddressLog()

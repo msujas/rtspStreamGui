@@ -184,7 +184,7 @@ class Worker(QtCore.QObject):
 			lineendy = int(ycenter + (size/2)*math.sin(angler))
 			y2 = np.arange(linestarty, lineendy+1, sign,dtype = np.int16)
 			x2 = np.astype((y2 - c)/m, np.int16)
-			condition = (abs(y2) < array.shape[0]) & (abs(x2) < array.shape[1])
+			condition = (abs(y2) < array.shape[0]) & (abs(x2+(thickness-1)/2) < array.shape[1])
 			y2 = y2[np.where(condition)]
 			x2 = x2[np.where(condition)]
 			for n in range(thickness):
@@ -197,7 +197,7 @@ class Worker(QtCore.QObject):
 
 		x = np.arange(linestartx, lineendx+1, dtype = np.int16)
 		y:np.ndarray = np.astype(m*x + c, np.int16)
-		condition = (abs(y) < array.shape[0]) & (abs(x) < array.shape[1])
+		condition = (abs(y+(thickness-1)/2) < array.shape[0]) & (abs(x) < array.shape[1])
 		y = y[np.where(condition)]
 		x = x[np.where(condition)]
 		for n in range(thickness):
