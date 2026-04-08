@@ -38,34 +38,21 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.screen = QtWidgets.QApplication.primaryScreen().size()
 		self.screenwidth = self.screen.width()
 		self.screenheight = self.screen.height()
-
-
 		if self.screenheight > 2000:
 			monydefault = 2000
 		elif self.screenheight > 1400:
 			monydefault = 1300
 		else:
 			monydefault = 900
-		scaling = (self.screenwidth/1920)**0.5 #scaling box and font sizes for different screen resolutions
-		windowsize = [int(350*scaling),int(700*scaling)]
-		super().resize(*windowsize)
-		super().move(0,self.screenheight - windowsize[1] - 75)
 		iconfile = f'{os.path.dirname(os.path.realpath(__file__))}/image/icon.ico'
 		icon = QtGui.QIcon(iconfile)
 		super().setWindowIcon(icon)
-		box1pos = [int(20*scaling), int(35*scaling)]
-		boxDimensions = [int(80*scaling),int(22*scaling)]
-		lineBoxDimensions = [int(200*scaling),int(22*scaling)]
-		boxOffset = boxDimensions[1] + int(18*scaling)
-		labelxpos = 20 + boxDimensions[0] + 10
-		box2x = int(20 + boxDimensions[0] + 10*scaling)
-		box1x = 20
 		homepath = str(Path.home())
 		endpath = 'Documents/rtspGuiSnapShots'
 		self.snapshotDir = f'{homepath}/{endpath}/'
 		if not os.path.exists(self.snapshotDir):
 			os.makedirs(self.snapshotDir)
-		
+		scaling = (self.screenwidth/1920)**0.5 #scaling box and font sizes for different screen resolutions
 		basefont = int(12*scaling)
 
 		self.centralwidget = QtWidgets.QWidget()
@@ -324,14 +311,14 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
 		self.gridlayout.addWidget(self.openDirectoryButton,19,2)
 
-
+		self.linegrid = QtWidgets.QGridLayout()
 
 		self.linePositionLabel = QtWidgets.QLabel()
 		self.linePositionLabel.setObjectName('linePositionLabel')
-		self.linePositionLabel.setText('line position')
+		self.linePositionLabel.setText('line y position')
 		self.linePositionLabel.setFont(labelfont)
 		self.linePositionLabel.adjustSize()
-		self.gridlayout.addWidget(self.linePositionLabel,20,0)
+		self.linegrid.addWidget(self.linePositionLabel,0,0)
 
 		self.linePositionBox =	 QtWidgets.QSpinBox() #select the size of the cross that is overlayed on the image
 		self.linePositionBox.setObjectName("linePositionBox")
@@ -343,7 +330,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.linePositionBox.setKeyboardTracking(False)
 		self.linePositionBox.valueChanged.connect(self.linePositionChange)
 		self.linePositionBox.valueChanged.connect(self.updateConfigLog)
-		self.gridlayout.addWidget(self.linePositionBox,21,0)
+		self.linegrid.addWidget(self.linePositionBox,1,0)
 
 		self.lineCheckBox =  QtWidgets.QCheckBox() #select whether or not to display the cross
 		self.lineCheckBox.setObjectName('lineCheckBox')
@@ -353,9 +340,30 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.lineCheckBox.adjustSize()
 		self.lineCheckBox.stateChanged.connect(self.lineCheckChange)
 		self.lineCheckBox.stateChanged.connect(self.updateConfigLog)
-		self.gridlayout.addWidget(self.lineCheckBox,21,1)
+		self.linegrid.addWidget(self.lineCheckBox,0,2)
 
-		self.lineanglegrid = QtWidgets.QGridLayout()
+		self.linexLabel = QtWidgets.QLabel()
+		self.linexLabel.setObjectName('linexLabel')
+		self.linexLabel.setText('line x position (from center)')
+		self.linexLabel.setFont(labelfont)
+		self.linexLabel.adjustSize()
+		self.linegrid.addWidget(self.linexLabel,0,1)	
+
+		self.linexposbox = QtWidgets.QSpinBox()
+		self.linexposbox.setObjectName('linexposbox')
+		self.linexposbox.setMaximum(3000)
+		self.linexposbox.setMinimum(-3000)
+		self.linexposbox.setEnabled(False)
+		self.linexposbox.setKeyboardTracking(False)
+		self.linegrid.addWidget(self.linexposbox, 1,1)
+		self.linexposbox.valueChanged.connect(self.linexposchange)
+
+		self.fixXbox = QtWidgets.QCheckBox()	
+		self.fixXbox.setObjectName('fixXbox')
+		self.fixXbox.setChecked(True)
+		self.fixXbox.setText('fix line x to cross?')
+		self.linegrid.addWidget(self.fixXbox, 1,2)
+		self.fixXbox.stateChanged.connect(self.linexcheckchange)
 
 		self.lineanglebox = QtWidgets.QDoubleSpinBox()
 		self.lineanglebox.setObjectName("lineanglebox")
@@ -365,24 +373,24 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.lineanglebox.setMinimum(-89.9)
 		self.lineanglebox.setMaximum(90)
 		self.lineanglebox.setKeyboardTracking(False)
-		self.lineanglegrid.addWidget(self.lineanglebox, 1,0)
+		self.linegrid.addWidget(self.lineanglebox, 3,0)
 
 		self.lineanglelabel= QtWidgets.QLabel()
 		self.lineanglelabel.setText('line angle')
-		self.lineanglegrid.addWidget(self.lineanglelabel, 0,0)
+		self.linegrid.addWidget(self.lineanglelabel, 2,0)
 
 		self.linethicknessbox = QtWidgets.QSpinBox()
 		self.linethicknessbox.setObjectName('linethicknessbox')
 		self.linethicknessbox.setValue(3)
 		self.linethicknessbox.setMinimum(1)
 		self.linethicknessbox.setKeyboardTracking(False)
-		self.lineanglegrid.addWidget(self.linethicknessbox,1,1)
+		self.linegrid.addWidget(self.linethicknessbox,3,1)
 		self.linethicknessbox.valueChanged.connect(self.linethicknesschange)
 		
 		self.linethicknesslabel = QtWidgets.QLabel()
 		self.linethicknesslabel.setText('line thickness')
 		self.linethicknesslabel.setObjectName('linethicknesslabel')
-		self.lineanglegrid.addWidget(self.linethicknesslabel,0,1)
+		self.linegrid.addWidget(self.linethicknesslabel,2,1)
 
 		self.linelengthbox = QtWidgets.QSpinBox()
 		self.linelengthbox.setObjectName('linelengthbox')
@@ -391,14 +399,14 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.linelengthbox.setValue(300)
 		self.linelengthbox.setKeyboardTracking(False)
 		self.linelengthbox.valueChanged.connect(self.linelengthchange)
-		self.lineanglegrid.addWidget(self.linelengthbox,1,2)
+		self.linegrid.addWidget(self.linelengthbox,3,2)
 
 		self.linelengthlabel = QtWidgets.QLabel()
 		self.linelengthlabel.setObjectName('linelengthlabel')
 		self.linelengthlabel.setText('line length')
-		self.lineanglegrid.addWidget(self.linelengthlabel,0,2)
+		self.linegrid.addWidget(self.linelengthlabel,2,2)
 
-		self.gridlayout.addLayout(self.lineanglegrid,22,0,1,2)
+		self.gridlayout.addLayout(self.linegrid,22,0,1,2)
 
 
 		self.centralwidget.setLayout(self.gridlayout)
@@ -428,7 +436,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 			self.readConfigLog()
 		if os.path.exists(self.addressLog):
 			self.readAddressLog()
-
+		self.linexposbox.setValue(self.crossOffsetWBox.value())
 		self.monitorxBox.setKeyboardTracking(False)
 		self.monitoryBox.setKeyboardTracking(False)
 
@@ -504,7 +512,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		gain = gain, screenwidth = self.screenwidth, screenheight=self.screenheight, frameSkip = frameSkip,
 		crosssize = crosssize,crossOffsetH = crossOffsetH, crossOffsetW = crossOffsetW, crossCheck = crossCheck, imageTime = imageTime, 
 		imageDir = self.snapshotDir,lineCheck=self.lineCheckBox.isChecked(), linePosition=self.linePositionBox.value(), useGain = useGain,
-		lineangle=self.lineanglebox.value(), linethickness=self.linethicknessbox.value(), linelength=self.linelengthbox.value())
+		lineangle=self.lineanglebox.value(), linethickness=self.linethicknessbox.value(), linelength=self.linelengthbox.value(),
+		linexoffset=self.linexposbox.value())
 
 		self.windowName = f'{rtspAdress} (press stop to close)'
 		cv2.namedWindow(self.windowName)
@@ -611,14 +620,19 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 	def crossHChange(self):
 		if self.running:
 			self.worker.crossOffsetH = self.crossOffsetHBox.value()
-
+			
 	def crossWChange(self):
+		if self.fixXbox.isChecked():
+			self.linexposbox.setValue(self.crossOffsetWBox.value())
 		if self.running:
 			self.worker.crossOffsetW = self.crossOffsetWBox.value()
 	
 	def linePositionChange(self):
 		if self.running:
 			self.worker.linePosition = self.linePositionBox.value()
+	def linexposchange(self):
+		if self.running:
+			self.worker.linexoffset = self.linexposbox.value()
 	def lineanglechange(self):
 		if self.running:
 			self.worker.lineangle = self.lineanglebox.value()
@@ -634,7 +648,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 	def lineCheckChange(self):
 		if self.running:
 			self.worker.lineCheck = self.lineCheckBox.isChecked()
-	
+
+	def linexcheckchange(self):
+		self.linexposbox.setEnabled(not self.fixXbox.isChecked())
+		if self.fixXbox.isChecked():
+			self.linexposbox.setValue(self.crossOffsetWBox.value())
+
 	def crossCheckChange(self):
 		if self.running:
 			self.worker.crossCheck = self.crossCheckBox.isChecked()
