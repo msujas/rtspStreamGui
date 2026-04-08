@@ -13,25 +13,21 @@ def applyGain(array,gain):
 	newarray = np.where(newarray > 255, 255, newarray).astype(np.uint8)
 	return newarray
 
-def aspectAdjust(monx,mony,imageapsect):
-	if monx/mony <imageapsect: #adjusting the monitor x or y values based on the aspect ratio
-		mony = int(monx/imageapsect)
-	elif monx/mony > imageapsect:
-		monx = int(mony*imageapsect)
-	return monx, mony
+def aspectAdjust(monx,imageapsect):
+	mony = int(monx/imageapsect)
+	return mony
 
 class Worker(QtCore.QObject):
 	#output = QtCore.pyqtSignal(QtGui.QPixmap)
 	output = QtCore.pyqtSignal(np.ndarray)
 	streamNotFound = QtCore.pyqtSignal()
-	def __init__(self,address:str, monitorx: int, monitory: int, gain: float,  screenwidth: int, frameSkip:int,
+	def __init__(self,address:str, monitorx: int,  gain: float,  screenwidth: int, frameSkip:int,
 			  screenheight: int, crosssize: int, crossOffsetH: int, crossOffsetW: int, crossCheck: bool, linePosition: int, 
 	imageTime: int, imageDir: str, record: bool = False, recordTime: int = 1, lineCheck: bool = True, useGain:bool = True,
 	lineangle:float = 0, linethickness:int = 3, linelength:int = 300, linexoffset:int=0):
 		super(Worker,self).__init__()
 		self.address = address
 		self.monitorx = monitorx
-		self.monitory = monitory
 		self.frameSkip = frameSkip
 		self.gain = gain
 		self.screenwidth = screenwidth
@@ -81,7 +77,7 @@ class Worker(QtCore.QObject):
 		print(self.height,self.width)
 		crossThickness = 4
 
-		self.monitorx,self.monitory = aspectAdjust(self.monitorx,self.monitory,self.aspect)
+		self.monitory = aspectAdjust(self.monitorx,self.aspect)
 
 		curr_frame_time = 0
 		prev_frame_time = 0

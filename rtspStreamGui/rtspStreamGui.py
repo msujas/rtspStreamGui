@@ -112,19 +112,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.monitorxLabel.setFont(labelfont)
 		self.gridlayout.addWidget(self.monitorxLabel, 4,0)
 
-		self.monitoryBox = QtWidgets.QSpinBox() #select y size of image on screen (in pixels)
-		self.monitoryBox.setMinimum(100)
-		self.monitoryBox.setMaximum(3000)
-		self.monitoryBox.setSingleStep(1)
-		self.monitoryBox.setProperty("value", monydefault)
-		self.monitoryBox.setObjectName("monitoryBox")
-		self.monitoryBox.setFont(boxfont)
-		self.gridlayout.addWidget(self.monitoryBox,5,1)
-
-		self.monitoryLabel = QtWidgets.QLabel()
-		self.monitoryLabel.setObjectName("monitoryLabel")
-		self.monitoryLabel.setFont(labelfont)
-		self.gridlayout.addWidget(self.monitoryLabel,4,1)
 
 		self.aspectInfoLabel = QtWidgets.QLabel()
 		self.aspectInfoLabel.setFont(smallLabelfont)
@@ -438,14 +425,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 			self.readAddressLog()
 		self.linexposbox.setValue(self.crossOffsetWBox.value())
 		self.monitorxBox.setKeyboardTracking(False)
-		self.monitoryBox.setKeyboardTracking(False)
+
 
 		self.gainBox.setKeyboardTracking(False)
 		self.crossSizeBox.setKeyboardTracking(False)
 		self.crossOffsetHBox.setKeyboardTracking(False)
 		self.crossOffsetWBox.setKeyboardTracking(False)
 		self.monitorxBox.valueChanged.connect(self.updateConfigLog)
-		self.monitoryBox.valueChanged.connect(self.updateConfigLog)
 		self.gainBox.valueChanged.connect(self.updateConfigLog)
 		self.crossSizeBox.valueChanged.connect(self.updateConfigLog)
 		self.crossOffsetHBox.valueChanged.connect(self.updateConfigLog)
@@ -462,7 +448,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.crossOffsetWBox.valueChanged.connect(self.crossWChange)
 		self.crossOffsetWBox.valueChanged.connect(self.updateConfigLog)
 		self.monitorxBox.valueChanged.connect(self.changeMonitorx)
-		self.monitoryBox.valueChanged.connect(self.changeMonitory)
 		self.lockCrossPositionBox.stateChanged.connect(self.crossDisplayCheck)
 		self.lockCrossPositionBox.stateChanged.connect(self.updateConfigLog)
 		self.openDirectoryButton.clicked.connect(self.folderDialogue)
@@ -477,8 +462,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
 		self.monitorxLabel.setText(_translate("MainWindow", "x image size on screen"))
 		self.monitorxLabel.adjustSize()
-		self.monitoryLabel.setText(_translate("MainWindow", "y image size on screen"))
-		self.monitoryLabel.adjustSize()
 		self.aspectInfoLabel.setText(_translate("MainWindow", "aspect ratio of image on screen will be "
 "scaled automatically"))
 		self.aspectInfoLabel.adjustSize()
@@ -497,7 +480,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
 		rtspAdress = self.rtspAddressBox.text()
 		monitorx = self.monitorxBox.value()
-		monitory = self.monitoryBox.value()
+	
 		frameSkip = self.frameSkipBox.value()
 		gain = self.gainBox.value()		
 		useGain = self.gainCheck.isChecked()
@@ -508,8 +491,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		crossCheck = self.crossCheckBox.isChecked()
 		imageTime = self.imageSeriesTime.value()
 
-		self.worker = Worker(address= rtspAdress, monitorx = monitorx,monitory = monitory,
-		gain = gain, screenwidth = self.screenwidth, screenheight=self.screenheight, frameSkip = frameSkip,
+		self.worker = Worker(address= rtspAdress, monitorx = monitorx, gain = gain, screenwidth = self.screenwidth, 
+		screenheight=self.screenheight, frameSkip = frameSkip,
 		crosssize = crosssize,crossOffsetH = crossOffsetH, crossOffsetW = crossOffsetW, crossCheck = crossCheck, imageTime = imageTime, 
 		imageDir = self.snapshotDir,lineCheck=self.lineCheckBox.isChecked(), linePosition=self.linePositionBox.value(), useGain = useGain,
 		lineangle=self.lineanglebox.value(), linethickness=self.linethicknessbox.value(), linelength=self.linelengthbox.value(),
@@ -558,7 +541,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 						self.crossOffsetHBox.objectName(): [self.crossOffsetHBox,self.crossOffsetHBox.value()],
 						self.crossOffsetWBox.objectName(): [self.crossOffsetWBox,self.crossOffsetWBox.value()],
 						self.monitorxBox.objectName(): [self.monitorxBox,self.monitorxBox.value()],
-						self.monitoryBox.objectName(): [self.monitoryBox,self.monitoryBox.value()],
 						self.gainBox.objectName(): [self.gainBox,self.gainBox.value()],
 						self.crossSizeBox.objectName(): [self.crossSizeBox, self.crossSizeBox.value()] ,
 						self.directoryBox.objectName():[self.directoryBox,self.directoryBox.text()],
@@ -660,21 +642,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		
 	def changeMonitorx(self):
 		monx = self.monitorxBox.value()
-		mony = self.monitoryBox.value()
 		if self.running:
 			aspect = self.worker.aspect
-			monx,mony = aspectAdjust(monx,mony,aspect)
+			mony = aspectAdjust(monx,aspect)
 			self.worker.monitorx = monx
 			self.worker.monitory = mony
-
-	def changeMonitory(self):
-		monx = self.monitorxBox.value()
-		mony = self.monitoryBox.value()
-		if self.running:
-			aspect = self.worker.aspect
-			monx,mony = aspectAdjust(monx,mony,aspect)
-			self.worker.monitory = mony
-			self.worker.monitorx = monx
 
 	def takeSingleImage(self):
 		if self.running:
