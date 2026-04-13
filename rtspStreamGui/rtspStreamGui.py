@@ -10,12 +10,11 @@ import os, sys
 
 
 def stringToBool(string):
-	if string == 'True':
-		return True
-	else:
-		return False
+	return string == 'True'
 
-class parAttributes():
+type _parlist = list[ParAttributes]
+
+class ParAttributes():
 	def __init__(self, param):
 		self.param = param
 	def name(self):
@@ -25,6 +24,36 @@ class parAttributes():
 			case QtWidgets.QSpinBox | QtWidgets.QDoubleSpinBox: return self.param.value()
 			case QtWidgets.QComboBox: return self.param.currentText()
 			case QtWidgets.QLineEdit: return self.param.text()
+			case QtWidgets.QCheckBox: return self.param.isChecked()
+			case _: raise TypeError(f"{self.param}, type: {type(self.param)} not in listed types")
+	def setValueFromText(self,strvalue:str):
+		match type(self.param):
+			case QtWidgets.QSpinBox: return self.param.setValue(int(strvalue))
+			case QtWidgets.QDoubleSpinBox: return self.param.setValue(float(strvalue))
+			case QtWidgets.QLineEdit: return self.param.setText(strvalue)
+			case QtWidgets.QCheckBox: return self.param.setChecked(stringToBool(strvalue))
+			case QtWidgets.QComboBox: return self.param.setCurrentText(strvalue)
+			case _: raise TypeError(f'{self.param}, type: {type(self.param)} not in listed types')
+
+class ParList():
+	def __init__(self, alist:list=None):
+		if not alist:
+			self.list:_parlist = []
+		elif not isinstance(alist,list):
+			raise TypeError("alist must be list type")
+		else:
+			self.list:_parlist = [ParAttributes(item) for item in alist]
+		
+	def append(self, widget):
+		self.list.append(ParAttributes(widget))
+	def __contains__(self, item):
+		return item in self.list or self.nameInList(item)
+	def __getitem__(self, key):
+		return self.list[key]
+	def getWidgetFromName(self,name:str) -> ParAttributes:
+		return [par for par in self.list if name == par.name()][0]
+	def nameInList(self,name:str):
+		return len([par for par in self.list if name == par.name()]) > 0
 
 
 class Ui_MainWindow(QtWidgets.QMainWindow):
@@ -412,16 +441,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 
 		self.running = False
 
-		self.updateParamDct()
+		self.updateParamList()
 		self.settingsLog = f'{homepath}/rtspGuiConfig/rtspGUIconfiguration.log'
 		self.addressLog = f'{homepath}/rtspGuiConfig/rtspAddresses.log'
-		if not os.path.exists(os.path.dirname(self.settingsLog)):
-			os.makedirs(os.path.dirname(self.settingsLog))
-		if os.path.exists(self.settingsLog):
-			self.readConfigLog()
-		if os.path.exists(self.addressLog):
-			self.readAddressLog()
 		self.linexposbox.setValue(self.crossOffsetWBox.value())
+		self.readConfigLog()
+		self.readAddressLog()
+		
 		self.monitorxBox.setKeyboardTracking(False)
 
 
@@ -518,20 +544,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		self.imageSeriesButton.setEnabled(False)
 		self.imageSeriesStopButton.setEnabled(False)
 		self.thread.wait()
+		self.updateConfigLog()
 		self.running = False
 
-	def updateParamDct(self):
-		self.paramDct = {self.rtspAddressBox.objectName(): [self.rtspAddressBox,self.rtspAddressBox.text()],
-						self.crossOffsetHBox.objectName(): [self.crossOffsetHBox,self.crossOffsetHBox.value()],
-						self.crossOffsetWBox.objectName(): [self.crossOffsetWBox,self.crossOffsetWBox.value()],
-						self.monitorxBox.objectName(): [self.monitorxBox,self.monitorxBox.value()],
-						self.gainBox.objectName(): [self.gainBox,self.gainBox.value()],
-						self.crossSizeBox.objectName(): [self.crossSizeBox, self.crossSizeBox.value()] ,
-						self.directoryBox.objectName():[self.directoryBox,self.directoryBox.text()],
-						self.linePositionBox.objectName():[self.linePositionBox,self.linePositionBox.value()],
-						self.lineCheckBox.objectName():[self.lineCheckBox,self.lineCheckBox.isChecked()],
-						self.frameSkipBox.objectName():[self.frameSkipBox,self.frameSkipBox.value()],
-						self.gainCheck.objectName():[self.gainCheck,self.gainCheck.isChecked()]}
+	def updateParamList(self):
+		self.params = ParList([self.rtspAddressBox,self.crossOffsetHBox, self.crossOffsetWBox,self.monitorxBox,self.gainBox,self.crossSizeBox,
+				self.directoryBox,self.linePositionBox,self.lineCheckBox,self.frameSkipBox,self.gainCheck,self.linexposbox, self.fixXbox,
+				self.lineanglebox])
 	
 	def addAddress(self):
 		currentAddress = self.rtspAddressBox.text()
@@ -557,6 +576,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 		f.close()
 	
 	def readAddressLog(self):
+		if not os.path.exists(self.addressLog):
+			return
 		f = open(self.addressLog,'r')
 		addressString = f.read()
 		f.close()
@@ -669,36 +690,32 @@ class Ui_MainWindow(QtWidgets.QMainWindow):
 			if self.running:
 				self.worker.imageDir = folder
 	def updateConfigLog(self):
-		self.updateParamDct()
 		logUpdate = ''
-		for par in self.paramDct:
-			logUpdate += f'{par};{self.paramDct[par][1]}\n'
+		if not os.path.exists(os.path.dirname(self.settingsLog)):
+			os.makedirs(os.path.dirname(self.settingsLog))
+		for par in self.params:
+			logUpdate += f'{par.name()};{par.parValue()}\n'
 		f = open(self.settingsLog,'w')
 		f.write(logUpdate)
 		f.close()
 	def readConfigLog(self):
+		if not os.path.exists(self.settingsLog):
+			return
 		f = open(self.settingsLog,'r')
 		lines = f.readlines()
 		f.close()
 		for line in lines:
 			parname = line.split(';')[0]
 			parvalue = line.split(';')[1].replace('\n','')
-			if parname not in list(self.paramDct.keys()):
+			if parname not in self.params:
+				print(f'{parname} not in parameter list')
 				continue
-			if type(self.paramDct[parname][0]) == QtWidgets.QSpinBox:
-				self.paramDct[parname][0].setValue(int(parvalue))
-			elif type(self.paramDct[parname][0]) == QtWidgets.QDoubleSpinBox:
-				self.paramDct[parname][0].setValue(float(parvalue))
-			elif type(self.paramDct[parname][0]) == QtWidgets.QLineEdit:
-				self.paramDct[parname][0].setText(parvalue)
-			elif type(self.paramDct[parname][0]) == QtWidgets.QComboBox:
-				self.paramDct[parname][0].setCurrentText(parvalue)
-			elif type(self.paramDct[parname][0]) == QtWidgets.QCheckBox:
-				self.paramDct[parname][0].setChecked(stringToBool(parvalue))
-		self.updateParamDct()
+			par = self.params.getWidgetFromName(parname)
+			par.setValueFromText(parvalue)
 	def closeEvent(self, a0):
 		if self.running:
 			self.stop_worker()
+		#self.updateConfigLog()
 		return super().closeEvent(a0)
 
 def main():
